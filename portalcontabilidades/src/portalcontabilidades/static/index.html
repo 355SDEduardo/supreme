@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Contabilidades & BPO Financeiro | Alpha Contabilidade</title>
+  <meta name="description" content="Plataforma de alta performance para Escritórios de Contabilidade e BPO Financeiro no Brasil com inteligência artificial, conformidade regulatória e segurança bancária.">
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Master Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css?v=2">
+</head>
+<body>
+
+  <div id="app-container">
+    <!-- Backdrop Overlay for Mobile Sidebar -->
+    <div id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <a href="#" class="brand-wrapper" onclick="navigateTo('cockpit')">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div class="brand-title-group">
+            <h1>ContabBPO</h1>
+            <span>Alpha Enterprise</span>
+          </div>
+        </a>
+        <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Fechar menu" title="Fechar menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-menu">
+        <div>
+          <div class="menu-section-label">Visão Geral</div>
+          <a class="nav-item active" data-view="cockpit">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <span>Cockpit Executivo</span>
+          </a>
+        </div>
+
+        <div>
+          <div class="menu-section-label">Gestão Operacional</div>
+          <a class="nav-item" data-view="companies">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></svg>
+            </div>
+            <span>Multiempresa & Clientes</span>
+          </a>
+          <a class="nav-item" data-view="obligations">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+            </div>
+            <span>Obrigações & Prazos</span>
+            <span class="nav-badge" id="sidebar-obligations-badge">!</span>
+          </a>
+          <a class="nav-item" data-view="documents">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <span>Gestão de Documentos</span>
+          </a>
+        </div>
+
+        <div>
+          <div class="menu-section-label">BPO Financeiro</div>
+          <a class="nav-item" data-view="finance">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            </div>
+            <span>Contas a Pagar / Receber</span>
+            <span class="nav-badge blue">BPO</span>
+          </a>
+          <a class="nav-item" data-view="reconciliation">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 17l10 5 10-5M2 12l10 5 10-5M2 7l10 5 10-5"/></svg>
+            </div>
+            <span>Conciliação Bancária OFX</span>
+          </a>
+          <a class="nav-item" data-view="analytics">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <span>DRE & Fluxo de Caixa</span>
+          </a>
+        </div>
+
+        <div>
+          <div class="menu-section-label">Fiscal & Inteligência</div>
+          <a class="nav-item" data-view="fiscal">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>
+            </div>
+            <span>Integrações Fiscais & CND</span>
+          </a>
+          <a class="nav-item" data-view="ai">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 6v6l4 2"/></svg>
+            </div>
+            <span>Automação & IA Contábil</span>
+            <span class="ai-pill" style="font-size: 0.65rem; padding: 0.1rem 0.4rem;">IA</span>
+          </a>
+        </div>
+
+        <div>
+          <div class="menu-section-label">Portal & Governança</div>
+          <a class="nav-item" data-view="portal">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            </div>
+            <span>Portal do Cliente & Guias</span>
+          </a>
+          <a class="nav-item" data-view="security">
+            <div class="nav-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <span>Segurança, LGPD & Vault</span>
+          </a>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="connection-status">
+          <div class="status-dot"></div>
+          <span>API Conectada (v1.0.0)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <main id="main-wrapper">
+      <!-- Topbar Header -->
+      <header id="topbar">
+        <div class="topbar-left">
+          <!-- Mobile Hamburger Toggle -->
+          <button class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Abrir Menu" title="Abrir Menu" onclick="toggleMobileSidebar()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+
+          <!-- Active Company Selector -->
+          <div class="company-context-pill" title="Clique para trocar a empresa ativa">
+            <div class="icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4"/></svg>
+            </div>
+            <div class="company-context-info">
+              <div class="company-context-name" id="current-company-name">Nexus Tecnologia Ltda</div>
+              <div class="company-context-meta" id="current-company-meta">CNPJ: 11.222.333/0001-81 • Simples Nacional</div>
+            </div>
+            <div class="company-chevron" style="color: var(--text-muted); margin-left: 0.35rem; display: flex; align-items: center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <select id="active-company-select" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer;"></select>
+          </div>
+
+          <!-- Competence Selector -->
+          <div class="competence-selector">
+            <span>Competência:</span>
+            <select id="competence-select">
+              <option value="2026-09" selected>09/2026 (Setembro)</option>
+              <option value="2026-10">10/2026 (Outubro)</option>
+              <option value="2026-08">08/2026 (Agosto)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="global-search">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Buscar no portal..." />
+          </div>
+
+          <button class="btn btn-secondary btn-icon" title="Atualizar Dados" onclick="refreshCurrentView()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </button>
+
+          <div class="user-profile-chip" onclick="navigateTo('security')">
+            <div class="user-avatar">LR</div>
+            <div class="user-details">
+              <div class="user-name">Lucas Rocha</div>
+              <div class="user-role">Sócio Administrador</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dynamic Content Injection Container -->
+      <section id="content-container">
+        <!-- Views rendered here dynamically by app.js -->
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- =========================================================================
+       MODALS
+       ========================================================================= -->
+
+  <!-- Modal: Nova Empresa -->
+  <div class="modal-overlay" id="modal-create-company">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Cadastrar Nova Empresa Cliente</div>
+        <button class="modal-close" onclick="closeModal('modal-create-company')">✕</button>
+      </div>
+      <form onsubmit="submitCreateCompanyForm(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Razão Social (Nome Oficial) *</label>
+            <input type="text" id="modal-comp-name" class="form-input" required placeholder="Ex: Inovação e Consultoria Ltda" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">CNPJ ou CPF (Validação Módulo 11) *</label>
+            <input type="text" id="modal-comp-cnpj" class="form-input" required placeholder="11.222.333/0001-81" />
+            <div class="form-hint">O sistema aplica rigoroso algoritmo verificador de dígitos oficiais do Brasil.</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Regime Tributário *</label>
+            <select id="modal-comp-regime" class="form-select" required>
+              <option value="simples_nacional">Simples Nacional</option>
+              <option value="lucro_presumido">Lucro Presumido</option>
+              <option value="lucro_real">Lucro Real</option>
+              <option value="mei">Microempreendedor Individual (MEI)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-company')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar e Ativar Cliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Solicitação em Lote -->
+  <div class="modal-overlay" id="modal-batch-request">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Disparo de Solicitação de Documentos em Lote</div>
+        <button class="modal-close" onclick="closeModal('modal-batch-request')">✕</button>
+      </div>
+      <form onsubmit="submitBatchRequestForm(event)">
+        <div class="modal-body">
+          <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1rem;">
+            Dispara automaticamente a notificação multicanal (Email e WhatsApp) cobrando os documentos pendentes de todas as empresas clientes ativas para a competência selecionada.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Competência de Referência</label>
+            <input type="text" class="form-input" value="2026-09" readonly />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-batch-request')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Executar Disparo Resiliente</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Anexar Recibo de Obrigação -->
+  <div class="modal-overlay" id="modal-attach-receipt">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Anexar Comprovante / Recibo da Obrigação</div>
+        <button class="modal-close" onclick="closeModal('modal-attach-receipt')">✕</button>
+      </div>
+      <form onsubmit="submitAttachReceiptForm(event)">
+        <input type="hidden" id="modal-attach-task-id" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Hash SHA-256 do Recibo Oficial (Auditável) *</label>
+            <input type="text" id="modal-attach-hash" class="form-input" placeholder="Cole o hash SHA-256 ou deixe vazio para gerar" />
+            <div class="form-hint">O comprovante é registrado na trilha de auditoria para fins de compliance fiscal.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-attach-receipt')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Gravar Comprovante</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Ingestão de Documento -->
+  <div class="modal-overlay" id="modal-upload-doc">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Ingestão de Documento Fiscal / Contábil</div>
+        <button class="modal-close" onclick="closeModal('modal-upload-doc')">✕</button>
+      </div>
+      <form onsubmit="submitUploadDocForm(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Departamento Destino *</label>
+            <select id="modal-upload-dept" class="form-select" required>
+              <option value="fiscal">Fiscal (Notas, Guias, Retenções)</option>
+              <option value="contabil">Contábil (Extratos, Balancetes)</option>
+              <option value="bpo">BPO Financeiro (Comprovantes, Boletos)</option>
+              <option value="rh">Departamento Pessoal / RH</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Selecione o Arquivo (PDF, OFX, XML, Imagem) *</label>
+            <input type="file" id="modal-upload-file" class="form-input" required />
+            <div class="form-hint">O arquivo é validado por assinatura digital de bytes (magic numbers) e carimbado com protocolo oficial.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-upload-doc')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Processar Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Título a Pagar -->
+  <div class="modal-overlay" id="modal-create-payable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Lançar Título a Pagar (BPO Financeiro)</div>
+        <button class="modal-close" onclick="closeModal('modal-create-payable')">✕</button>
+      </div>
+      <form onsubmit="submitCreatePayableForm(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Favorecido / Fornecedor *</label>
+            <input type="text" id="modal-pay-counterparty" class="form-input" required placeholder="Ex: Companhia de Energia Elétrica" />
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Valor do Título (R$) *</label>
+              <input type="number" step="0.01" id="modal-pay-amount" class="form-input" required placeholder="1500.00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Data de Vencimento *</label>
+              <input type="date" id="modal-pay-duedate" class="form-input" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Forma de Liquidação *</label>
+            <select id="modal-pay-method" class="form-select" required>
+              <option value="boleto">Boleto Bancário (FEBRABAN)</option>
+              <option value="pix">PIX (Chave / QrCode)</option>
+              <option value="ted">TED / Transferência</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Linha Digitável / Código de Barras</label>
+            <input type="text" id="modal-pay-barcode" class="form-input" placeholder="47 ou 48 dígitos" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Chave PIX (se aplicável)</label>
+            <input type="text" id="modal-pay-pix" class="form-input" placeholder="CNPJ, Email, Telefone ou Chave Aleatória" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-create-payable')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Registrar para Aprovação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Novo Chamado -->
+  <div class="modal-overlay" id="modal-new-ticket">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Abrir Chamado no Helpdesk Contábil</div>
+        <button class="modal-close" onclick="closeModal('modal-new-ticket')">✕</button>
+      </div>
+      <form onsubmit="submitNewTicketForm(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Categoria do Atendimento *</label>
+            <select id="modal-ticket-category" class="form-select" required>
+              <option value="admission">Admissão de Colaborador</option>
+              <option value="termination">Rescisão de Contrato</option>
+              <option value="vacation">Férias</option>
+              <option value="fiscal">Dúvida Fiscal / Tributária</option>
+              <option value="accounting">Contabilidade & Balancete</option>
+              <option value="bpo_finance">BPO Financeiro</option>
+              <option value="other">Outros Assuntos</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Título / Assunto *</label>
+            <input type="text" id="modal-ticket-title" class="form-input" required placeholder="Ex: Solicitação de férias João da Silva" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prioridade *</label>
+            <select id="modal-ticket-priority" class="form-select" required>
+              <option value="low">Baixa</option>
+              <option value="medium" selected>Normal</option>
+              <option value="high">Alta</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descrição Detalhada *</label>
+            <textarea id="modal-ticket-desc" class="form-textarea" rows="4" required placeholder="Detalhe sua solicitação aqui..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-new-ticket')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar Chamado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: MFA Setup -->
+  <div class="modal-overlay" id="modal-mfa-setup">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Configurar Autenticação em Duas Etapas (MFA)</div>
+        <button class="modal-close" onclick="closeModal('modal-mfa-setup')">✕</button>
+      </div>
+      <form onsubmit="submitMfaVerifyForm(event)">
+        <div class="modal-body">
+          <p style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 1rem;">
+            Utilize qualquer aplicativo autenticador padrão (Google Authenticator, Microsoft Authenticator, 1Password) para escanear ou inserir o código abaixo:
+          </p>
+          <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.25rem;">
+            <div style="font-size: 0.75rem; color: #9ca3af; text-transform: uppercase;">Chave de Configuração Manual</div>
+            <div style="font-size: 1.3rem; font-family: monospace; font-weight: 700; color: #60a5fa; letter-spacing: 0.1em; margin: 0.4rem 0;" id="mfa-secret-code">JBSWY3DPEHPK3PXP</div>
+            <input type="hidden" id="mfa-otp-url" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Digite o Token de 6 dígitos gerado pelo App *</label>
+            <input type="text" id="modal-mfa-token" class="form-input" required maxlength="6" placeholder="Ex: 123456" style="text-align: center; font-size: 1.25rem; letter-spacing: 0.2em;" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-mfa-setup')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Validar e Ativar MFA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="/static/js/api.js?v=2"></script>
+  <script src="/static/js/charts.js?v=2"></script>
+  <script src="/static/js/app.js?v=2"></script>
+</body>
+</html>

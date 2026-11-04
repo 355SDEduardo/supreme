@@ -1,0 +1,2397 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supreme — Plataforma Contábil &amp; BPO Financeiro Unificada</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- ========================================================================
+       TELA DE AUTENTICAÇÃO (GATEWAY IAM + MFA TOTP)
+       ======================================================================== -->
+  <div id="login-screen" class="login-shell">
+    <form id="login-form" class="login-card">
+      <div class="brand-mark">Supreme</div>
+      <h1>Plataforma Contábil Unificada</h1>
+      <p>Acesso autenticado via Gateway aos 14 microserviços contábeis, fiscais e de BPO financeiro.</p>
+      <label>E-mail
+        <input id="email" name="email" type="email" autocomplete="username" placeholder="admin@seu-escritorio.com" required>
+      </label>
+      <label>Senha
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <label>Código MFA (6 dígitos, se habilitado)
+        <input id="totp" name="totp" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="000000">
+      </label>
+      <button type="submit" style="width:100%; margin-top:6px;">Entrar na Plataforma</button>
+      <div id="login-feedback" class="alert hidden" role="alert" style="margin:12px 0 0;"></div>
+    </form>
+  </div>
+
+  <!-- ========================================================================
+       SHELL PRINCIPAL DA PLATAFORMA UNIFICADA SUPREME
+       ======================================================================== -->
+  <div id="app-shell" class="shell hidden">
+    <!-- SIDEBAR DE NAVEGAÇÃO -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-mark">Supreme</span>
+        <strong>Escritório Contábil &amp; BPO</strong>
+        <small>14 Microserviços Integrados</small>
+      </div>
+
+      <nav id="module-nav" aria-label="Módulos da plataforma">
+        <div class="nav-section-label">Visão Executiva &amp; Carteira</div>
+        <button type="button" class="nav-item active" data-view="cockpit">
+          <span>Visão Geral (Cockpit)</span>
+          <span class="nav-badge" id="nav-badge-companies">14 MS</span>
+        </button>
+        <button type="button" class="nav-item" data-view="companies">
+          <span>Empresas (Multiempresa)</span>
+        </button>
+        <button type="button" class="nav-item" data-view="obligations">
+          <span>Obrigações &amp; Tarefas</span>
+          <span class="nav-badge" id="nav-badge-tasks">SLA</span>
+        </button>
+        <button type="button" class="nav-item" data-view="documents">
+          <span>Documentos (GED SHA-256)</span>
+        </button>
+
+        <div class="nav-section-label">Motores Fiscais &amp; Auditoria</div>
+        <button type="button" class="nav-item" data-view="nfse">
+          <span>Inteligência NFS-e</span>
+        </button>
+        <button type="button" class="nav-item" data-view="nfe">
+          <span>NF-e, ST/DIFAL &amp; ZIPs</span>
+        </button>
+        <button type="button" class="nav-item" data-view="tax-audit">
+          <span>Auditoria Tributária Federal</span>
+        </button>
+        <button type="button" class="nav-item" data-view="fiscal">
+          <span>Fiscal &amp; Gov (e-CAC / Reinf)</span>
+        </button>
+
+        <div class="nav-section-label">BPO Financeiro &amp; Analytics</div>
+        <button type="button" class="nav-item" data-view="bills">
+          <span>Financeiro BPO (Contas)</span>
+        </button>
+        <button type="button" class="nav-item" data-view="reconciliation">
+          <span>Conciliação Bancária (OFX)</span>
+        </button>
+        <button type="button" class="nav-item" data-view="analytics">
+          <span>DRE, Fluxo de Caixa &amp; KPIs</span>
+        </button>
+
+        <div class="nav-section-label">Automação, Cliente &amp; Utilitários</div>
+        <button type="button" class="nav-item" data-view="ai">
+          <span>Automação &amp; IA Contábil</span>
+        </button>
+        <button type="button" class="nav-item" data-view="portal">
+          <span>Portal do Cliente &amp; Guias</span>
+        </button>
+        <button type="button" class="nav-item" data-view="pdf">
+          <span>Ferramentas PDF</span>
+        </button>
+
+        <div class="nav-section-label">Governança &amp; Conformidade</div>
+        <button type="button" class="nav-item" data-view="security">
+          <span>Segurança, MFA &amp; LGPD</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar" id="current-user-avatar">AD</div>
+          <div class="user-info">
+            <div class="user-name" id="current-user-name">Administrador</div>
+            <div class="user-role" id="current-user-role">Coordenador Contábil</div>
+          </div>
+        </div>
+        <div class="sidebar-actions">
+          <button id="mfa-setup-btn" type="button" class="secondary">MFA TOTP</button>
+          <button id="logout-btn" type="button" class="secondary">Sair</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="content">
+      <!-- BARRA SUPERIOR DE CONTEXTO -->
+      <header class="topbar">
+        <div>
+          <h2 id="view-title">Cockpit Executivo da Carteira</h2>
+          <p id="view-subtitle">Monitoramento consolidado multiempresa, obrigações fiscais e SLA operacional.</p>
+        </div>
+
+        <div class="context-controls">
+          <label>Busca Rápida
+            <input id="global-search-input" type="search" placeholder="CNPJ, razão social, obrigação... ( / )">
+          </label>
+          <label>Empresa Ativa
+            <select id="company-select"></select>
+          </label>
+          <label>Competência
+            <input id="competence-input" type="month" value="2026-10">
+          </label>
+          <div class="status-pill" title="Motor de SLA e Conformidade Fiscal">
+            <span class="status-dot"></span>
+            <span id="global-sla-pill">SLA Global: 98.4%</span>
+          </div>
+          <button id="refresh-view-btn" type="button" class="secondary">Atualizar</button>
+          <button id="open-create-company-btn" type="button">+ Nova Empresa</button>
+        </div>
+      </header>
+
+      <div id="status-banner" class="alert hidden" role="status"></div>
+
+      <!-- WORKSPACE DE TELAS NATIVAS (SEM IFRAME) -->
+      <section id="workspace" class="workspace">
+
+        <!-- ==================================================================
+             VIEW 01: COCKPIT EXECUTIVO (svc-companies + svc-obligations)
+             ================================================================== -->
+        <section id="view-cockpit" class="view-section active">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Cockpit Executivo da Carteira</h3>
+              <p>Visão geral de saúde operacional, regimes tributários, fechamento mensal e capacidade da equipe.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="generateMonthlyTasksBatch">Gerar Tarefas do Mês</button>
+              <button type="button" class="btn btn-primary" data-action="openBatchRequestModal">Solicitar Docs em Lote</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total de Empresas</span>
+              <div class="kpi-value" id="kpi-total-companies">0</div>
+              <div class="kpi-sub">Carteira ativa multi-tenant</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Em Dia / Regular</span>
+              <div class="kpi-value" id="kpi-status-green" style="color:var(--ok);">0</div>
+              <div class="kpi-sub">Fechamento e guias regulares</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Atenção / Pendências</span>
+              <div class="kpi-value" id="kpi-status-yellow" style="color:var(--warn);">0</div>
+              <div class="kpi-sub">Aguardando documentos do cliente</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Crítico / Atrasos</span>
+              <div class="kpi-value" id="kpi-status-red" style="color:var(--err);">0</div>
+              <div class="kpi-sub">CND ou obrigação próxima do prazo</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Simples Nacional</span>
+              <div class="kpi-value" id="kpi-regime-simples">0</div>
+              <div class="kpi-sub">PGDAS-D / DEFIS / DAS</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Lucro Presumido / Real</span>
+              <div class="kpi-value" id="kpi-regime-presumido-real">0</div>
+              <div class="kpi-sub">SPED / EFD-Contribuições / DCTFWeb</div>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Radar de Obrigações Fiscais Prioritárias</h4>
+                  <div class="card-subtitle">Tarefas ordenadas por vencimento legal e nível de risco SLA</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" data-nav-view="obligations">Ver Todas</button>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Obrigação</th>
+                      <th>Competência</th>
+                      <th>Vencimento Legal</th>
+                      <th>Risco SLA</th>
+                      <th>Status</th>
+                      <th>Recibo</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cockpit-tasks-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card col-5">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Distribuição de Carga da Equipe Analítica</h4>
+                  <div class="card-subtitle">Capacidade operacional por analista contábil/fiscal</div>
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" data-action="refreshWorkload">Atualizar</button>
+              </div>
+              <div class="card-body" id="workload-bars-container"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 02: GESTÃO MULTIEMPRESA (svc-companies)
+             ================================================================== -->
+        <section id="view-companies" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Gestão Multiempresa &amp; Carteira de Clientes</h3>
+              <p>Isolamento multi-tenant, validação Módulo 11 de CNPJ/CPF, enquadramento tributário e alocação de equipe.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="openBatchRequestModal">Cobrar Documentos em Lote</button>
+              <button type="button" class="btn btn-primary" data-action="openCreateCompanyModal">+ Cadastrar Empresa</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <input type="text" class="form-input" id="companies-search-input" placeholder="Filtrar por Razão Social, Nome Fantasia ou CNPJ...">
+            <select class="form-select" id="companies-regime-filter">
+              <option value="">Todos os Regimes Tributários</option>
+              <option value="simples_nacional">Simples Nacional</option>
+              <option value="lucro_presumido">Lucro Presumido</option>
+              <option value="lucro_real">Lucro Real</option>
+              <option value="mei">MEI</option>
+            </select>
+            <select class="form-select" id="companies-status-filter">
+              <option value="">Todos os Status</option>
+              <option value="active">Ativas</option>
+              <option value="onboarding">Em Onboarding</option>
+              <option value="suspended">Suspensas</option>
+            </select>
+            <button type="button" class="btn btn-secondary btn-sm" data-action="loadCompaniesList">Filtrar</button>
+          </div>
+
+          <div class="card">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Razão Social / Nome Fantasia</th>
+                    <th>CNPJ / CPF</th>
+                    <th>Regime Tributário</th>
+                    <th>Saúde Operacional</th>
+                    <th>Obrigações Pendentes</th>
+                    <th>Docs Faltantes</th>
+                    <th>Analista Responsável</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="companies-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 03: CENTRAL DE OBRIGAÇÕES, TAREFAS E PRAZOS (svc-obligations)
+             ================================================================== -->
+        <section id="view-obligations" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Central de Obrigações Fiscais, Tarefas e Prazos</h3>
+              <p>Controle rigoroso de vencimentos legais, prazos internos (SLA) e trava de conclusão mediante recibo oficial.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="generateMonthlyTasksBatch">+ Gerar Lote da Competência</button>
+              <button type="button" class="btn btn-primary" data-action="loadTasksList">Recarregar</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <select class="form-select" id="tasks-status-filter">
+              <option value="">Todos os Status</option>
+              <option value="pending">Pendente</option>
+              <option value="in_progress">Em Andamento</option>
+              <option value="under_review">Em Revisão</option>
+              <option value="completed">Concluída</option>
+              <option value="blocked_missing_docs">Bloqueada (Falta Doc)</option>
+            </select>
+            <select class="form-select" id="tasks-risk-filter">
+              <option value="">Todos os Níveis de Risco</option>
+              <option value="overdue">Vencidas (Overdue)</option>
+              <option value="red_critical">Crítico (&lt;= 2 dias)</option>
+              <option value="yellow">Atenção (&lt;= 5 dias)</option>
+              <option value="green">No Prazo</option>
+            </select>
+          </div>
+
+          <div class="card" style="margin-bottom:18px;">
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Obrigação / Título</th>
+                    <th>Competência</th>
+                    <th>Prazo Interno (SLA)</th>
+                    <th>Vencimento Legal</th>
+                    <th>Risco / Dias</th>
+                    <th>Status Atual</th>
+                    <th>Comprovante / Hash</th>
+                    <th>Ação</th>
+                  </tr>
+                </thead>
+                <tbody id="tasks-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h4 class="card-title">Catálogo Oficial de Obrigações Ativas da Empresa</h4>
+                <div class="card-subtitle">Regras de calendário fiscal e exigência de protocolo de transmissão</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="company-obligations-catalog" style="display:flex; gap:12px; flex-wrap:wrap;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 04: GESTÃO INTELIGENTE DE DOCUMENTOS - GED (svc-documents)
+             ================================================================== -->
+        <section id="view-documents" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Gestão Inteligente de Documentos (GED) &amp; Custódia SHA-256</h3>
+              <p>Inspeção de assinatura binária (magic numbers), versionamento automático, deduplicação SHA-256 e protocolo digital.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="requestMissingChecklist">Cobrar Documentos Faltantes</button>
+              <button type="button" class="btn btn-primary" data-action="openUploadDocModal">Enviar Documento (Upload)</button>
+            </div>
+          </div>
+
+          <div class="filter-bar">
+            <select class="form-select" id="docs-dept-filter">
+              <option value="">Todos os Departamentos</option>
+              <option value="fiscal">Fiscal (XML, NF-e, SPED)</option>
+              <option value="contabil">Contábil (Balancetes, Extratos)</option>
+              <option value="dp">Departamento Pessoal (Folha, FGTS)</option>
+              <option value="financeiro">Financeiro (OFX, Boletos, Comprovantes)</option>
+              <option value="societario">Societário (Contratos, Certidões)</option>
+            </select>
+            <select class="form-select" id="docs-status-filter">
+              <option value="">Todos os Status</option>
+              <option value="received">Recebido</option>
+              <option value="validated">Validado</option>
+              <option value="indexed">Indexado OCR</option>
+            </select>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-4">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Checklist Mensal Obrigatório</h4>
+                  <div class="card-subtitle">Progresso de entrega da competência</div>
+                </div>
+                <span class="badge badge-blue" id="checklist-progress-badge">0%</span>
+              </div>
+              <div class="card-body">
+                <div class="progress-bar-track" style="margin-bottom:14px;">
+                  <div class="progress-bar-fill" id="checklist-progress-fill" style="width:0%;"></div>
+                </div>
+                <div id="checklist-items-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+              </div>
+            </div>
+
+            <div class="card col-8">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Repositório Auditado SHA-256</h4>
+                  <div class="card-subtitle">Controle estrito de versão e protocolo jurídico de recebimento</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Arquivo &amp; Versão</th>
+                      <th>Departamento</th>
+                      <th>Competência</th>
+                      <th>Tamanho</th>
+                      <th>Status &amp; OCR</th>
+                      <th>Protocolo Digital SHA-256</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="documents-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="document-inspector-card" style="margin-top:16px; display:none;">
+            <div class="card-header">
+              <h4 class="card-title" id="inspector-title">Visualização Rápida e Protocolo Digital</h4>
+              <button type="button" class="btn btn-sm btn-ghost" data-action="closeDocumentInspector">Fechar</button>
+            </div>
+            <div class="card-body" id="document-inspector-body"></div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 05: BPO FINANCEIRO — CONTAS A PAGAR E RECEBER (svc-finance-bpo)
+             ================================================================== -->
+        <section id="view-bills" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>BPO Financeiro — Contas a Pagar, Receber &amp; Aging List</h3>
+              <p>Validação de boletos FEBRABAN/PIX, bloqueio de duplicidades, alçada de aprovação com segregação de funções e régua de cobrança.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="loadAgingReport">Atualizar Aging</button>
+              <button type="button" class="btn btn-primary" data-action="openCreatePayableModal">+ Novo Título Financeiro</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total a Receber Vencido</span>
+              <div class="kpi-value" id="aging-total-overdue" style="color:var(--err);">R$ 0,00</div>
+              <div class="kpi-sub">Títulos em atraso na carteira</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Taxa de Inadimplência</span>
+              <div class="kpi-value" id="aging-default-rate">0.0%</div>
+              <div class="kpi-sub">Índice sobre faturamento</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Títulos em Aprovação</span>
+              <div class="kpi-value" id="payable-queue-count" style="color:var(--warn);">0</div>
+              <div class="kpi-sub">Aguardando liberação do gestor</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Total da Fila a Pagar</span>
+              <div class="kpi-value" id="payable-total-amount">R$ 0,00</div>
+              <div class="kpi-sub">Programação financeira auditada</div>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Fila de Aprovação de Pagamentos (Segregação de Funções)</h4>
+                  <div class="card-subtitle">Operadores BPO cadastram; gestores aprovam ou rejeitam com justificativa</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Fornecedor / Favorecido</th>
+                      <th>Vencimento</th>
+                      <th>Meio de Pagamento</th>
+                      <th class="text-right">Valor Final</th>
+                      <th>Status</th>
+                      <th>Ações de Alçada</th>
+                    </tr>
+                  </thead>
+                  <tbody id="payables-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card col-5">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Aging List — Inadimplência por Faixa de Atraso</h4>
+                  <div class="card-subtitle">Contas a receber vencidas e disparo de cobrança</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="aging-brackets-container" style="margin-bottom:16px;"></div>
+                <div class="table-wrapper">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Cliente</th>
+                        <th>Atraso</th>
+                        <th class="text-right">Valor</th>
+                        <th>Cobrança</th>
+                      </tr>
+                    </thead>
+                    <tbody id="aging-items-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 06: CONCILIAÇÃO BANCÁRIA AUTOMÁTICA — OFX (svc-bank-reconciliation)
+             ================================================================== -->
+        <section id="view-reconciliation" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Conciliação Bancária Automática (OFX &amp; Matching Engine)</h3>
+              <p>Importação de extratos OFX com deduplicação FITID, pareamento inteligente com títulos do financeiro e auditoria de saldo.</p>
+            </div>
+            <div class="action-group">
+              <select class="form-select" id="recon-bank-account-select" style="width:240px;">
+                <option value="acc-itau-01">Banco Itaú (341) — Ag 0001 / CC 12345-6</option>
+                <option value="acc-bradesco-02">Bradesco (237) — Ag 1420 / CC 99887-1</option>
+              </select>
+              <input type="file" id="ofx-upload-input" accept=".ofx,.txt" class="hidden">
+              <button type="button" class="btn btn-secondary" data-action="triggerOfxFileInput">Importar Extrato OFX</button>
+              <button type="button" class="btn btn-secondary" data-action="verifyBankBalance">Verificar Equação de Saldo</button>
+              <button type="button" class="btn btn-primary" data-action="runMatchingSuggestions">Executar Motor de Matching</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-body" style="padding:12px 18px;">
+              <form id="bank-account-create-form" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                <label style="margin:0; flex:1; min-width:120px;">Código Banco
+                  <input id="bank-code-input" value="341" required>
+                </label>
+                <label style="margin:0; flex:2; min-width:160px;">Nome do Banco
+                  <input id="bank-name-input" value="Itaú Unibanco" required>
+                </label>
+                <label style="margin:0; flex:1; min-width:110px;">Agência
+                  <input id="bank-agency-input" value="0001" required>
+                </label>
+                <label style="margin:0; flex:1; min-width:130px;">Conta Corrente
+                  <input id="bank-account-number-input" value="12345-6" required>
+                </label>
+                <button type="submit" class="btn btn-secondary">+ Cadastrar Conta Bancária</button>
+              </form>
+            </div>
+          </div>
+
+          <div id="balance-check-banner" class="alert-box success" style="margin-bottom:16px; display:none;">
+            <div style="flex:1;">
+              <strong id="balance-status-title">Verificação Matemática de Saldo Concluída</strong>
+              <div id="balance-equation-details" class="mono" style="font-size:0.8rem; margin-top:4px;"></div>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Transações Bancárias Pendentes de Conciliação</h4>
+                  <div class="card-subtitle">Lançamentos do extrato OFX aguardando vínculo ou classificação rápida</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>FITID</th>
+                      <th>Histórico / Memo</th>
+                      <th class="text-right">Valor</th>
+                      <th>Ações Rápidas</th>
+                    </tr>
+                  </thead>
+                  <tbody id="unmatched-trx-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card col-5">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Sugestões Automáticas do Motor de Matching</h4>
+                  <div class="card-subtitle">Pareamento por valor exato, tolerância de vencimento e similaridade</div>
+                </div>
+              </div>
+              <div class="card-body" id="matching-suggestions-container"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 07: FLUXO DE CAIXA, DRE E DASHBOARDS (svc-analytics-dre)
+             ================================================================== -->
+        <section id="view-analytics" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Demonstração do Resultado (DRE), Fluxo de Caixa &amp; Indicadores</h3>
+              <p>DRE gerencial em Decimal com Análise Vertical (AV%) e Horizontal (AH%), projeção de caixa e exportação em PDF.</p>
+            </div>
+            <div class="action-group">
+              <select class="form-select" id="cashflow-days-select" style="width:175px;">
+                <option value="30">Projeção 30 dias</option>
+                <option value="60">Projeção 60 dias</option>
+                <option value="90">Projeção 90 dias</option>
+              </select>
+              <button type="button" class="btn btn-secondary" data-action="loadAnalyticsViewData">Recalcular Indicadores</button>
+              <button type="button" class="btn btn-primary" data-action="exportExecutivePdfReport">Exportar Relatório Executivo (PDF)</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Receita Líquida</span>
+              <div class="kpi-value" id="dre-kpi-net-rev">R$ 0,00</div>
+              <div class="kpi-sub">Competência selecionada</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">EBITDA Operacional</span>
+              <div class="kpi-value" id="dre-kpi-ebitda" style="color:var(--accent);">R$ 0,00</div>
+              <div class="kpi-sub">Geração operacional de caixa</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Resultado Líquido</span>
+              <div class="kpi-value" id="dre-kpi-net-inc" style="color:var(--ok);">R$ 0,00</div>
+              <div class="kpi-sub" id="dre-kpi-margin-badge">Margem Líquida: 0%</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Ciclo Financeiro</span>
+              <div class="kpi-value" id="dre-kpi-cycle">0 dias</div>
+              <div class="kpi-sub">PMR - PMP operacional</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Ponto de Equilíbrio</span>
+              <div class="kpi-value" id="dre-kpi-breakeven">R$ 0,00</div>
+              <div class="kpi-sub">Break-even point mensal</div>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">DRE Gerencial Dinâmica (Análise Vertical &amp; Horizontal)</h4>
+                  <div class="card-subtitle">Projeções alimentadas pelos eventos de baixa financeira</div>
+                </div>
+                <span class="badge badge-blue" id="dre-competence-badge">2026-10</span>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Estrutura de Contas DRE</th>
+                      <th class="text-right">Saldo Atual (R$)</th>
+                      <th class="text-right">AV (%)</th>
+                      <th class="text-right">AH (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="dre-Dynamic-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="col-5" style="display:flex; flex-direction:column; gap:16px;">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Projeção Diária de Fluxo de Caixa</h4>
+                    <div class="card-subtitle">Monitoramento de liquidez e alertas de descoberto</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <canvas id="cashflow-chart" style="width:100%; height:220px;"></canvas>
+                  <div id="cashflow-alerts-container" style="margin-top:10px;"></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Composição de Custos, Deduções e Resultado</h4>
+                    <div class="card-subtitle">Distribuição percentual sobre a Receita Bruta</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <canvas id="dre-donut-chart" style="width:100%; height:200px;"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 08: INTEGRAÇÕES FISCAIS E GOVERNAMENTAIS (svc-fiscal-gov)
+             ================================================================== -->
+        <section id="view-fiscal" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Integrações Fiscais Governamentais (eSocial, EFD-Reinf, DCTFWeb &amp; SERPRO)</h3>
+              <p>Enfileiramento seguro de eventos XML, consulta de CND e prévia consolidada da DCTFWeb a partir das retenções de NFS-e.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="checkCompanyCndStatus">Consultar CND (SERPRO)</button>
+              <button type="button" class="btn btn-primary" data-action="consolidateDctfwebAction">Gerar Prévia DCTFWeb</button>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-5">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Situação Fiscal &amp; Consolidação DCTFWeb</h4>
+                  <div class="card-subtitle">Certidão Negativa de Débitos e prévia de retenções federais</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="cnd-status-panel"></div>
+                <div id="dctfweb-result-box" style="margin-top:14px; display:none;"></div>
+              </div>
+            </div>
+
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Enfileiramento de Transmissão Fiscal Assíncrona</h4>
+                  <div class="card-subtitle">Validação XML contra XXE/DTD e controle de idempotência</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="fiscal-transmission-form">
+                  <div class="grid-two">
+                    <label>Sistema Governamental
+                      <select id="fiscal-system-target">
+                        <option value="efd_reinf">EFD-Reinf</option>
+                        <option value="esocial">eSocial</option>
+                        <option value="dctfweb">DCTFWeb</option>
+                        <option value="nfse_nacional">NFS-e Ambiente Nacional</option>
+                        <option value="integra_contador">SERPRO Integra Contador</option>
+                      </select>
+                    </label>
+                    <label>Evento Fiscal
+                      <select id="fiscal-event-type">
+                        <option value="R-2010">R-2010 — Retenção Contribuição Previdenciária</option>
+                        <option value="R-4020">R-4020 — Pagamentos/Créditos a Pessoa Jurídica</option>
+                        <option value="S-1200">S-1200 — Remuneração de Trabalhador (eSocial)</option>
+                        <option value="DCTFWeb-Mensal">DCTFWeb — Declaração Mensal</option>
+                      </select>
+                    </label>
+                    <label>Competência
+                      <input type="text" id="fiscal-competence" value="2026-10" required>
+                    </label>
+                    <label>Ambiente
+                      <select id="fiscal-environment">
+                        <option value="test_restricted">Produção Restrita / Homologação</option>
+                        <option value="production">Produção Oficial</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label>Payload XML Assinado
+                    <textarea class="form-textarea mono" id="fiscal-xml-payload">&lt;Reinf xmlns="http://www.reinf.esocial.gov.br/schemas/evtTomadorServicos/v2_01_02"&gt;&lt;evtServTom id="ID11122233300018120261000001"&gt;&lt;ideEvento&gt;&lt;perApur&gt;2026-10&lt;/perApur&gt;&lt;/ideEvento&gt;&lt;/evtServTom&gt;&lt;/Reinf&gt;</textarea>
+                  </label>
+                  <button type="submit" class="btn btn-primary">Validar XML e Enfileirar Transmissão</button>
+                </form>
+
+                <div class="table-wrapper" style="margin-top:16px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>ID Transmissão</th>
+                        <th>Evento</th>
+                        <th>Competência</th>
+                        <th>Status</th>
+                        <th>Protocolo / Mensagem</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody id="fiscal-transmissions-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 09: AUTOMAÇÃO E IA CONTÁBIL (svc-accounting-ai)
+             ================================================================== -->
+        <section id="view-ai" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Automação, OCR Fiscal e Inteligência Artificial Contábil</h3>
+              <p>Sugestão de partida dobrada com ciclo de aprendizado humano, extração OCR de documentos e detecção preditiva de anomalias.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="runAnomalyScanAction">Executar Varredura Preditiva de Anomalias</button>
+              <button type="button" class="btn btn-primary" data-action="generateAiExecutiveSummary">Gerar Resumo Executivo Narrativo</button>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Classificador Contábil IA (Partida Dobrada) &amp; OCR</h4>
+                  <div class="card-subtitle">Sugestão de conta Débito/Crédito com score de confiança e revisão humana</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="ai-classify-form">
+                  <div class="grid-two">
+                    <label>Histórico Bancário / Descrição da Nota
+                      <input type="text" id="ai-memo-input" value="PAGTO PIX AWS CLOUD SERVICES BRASIL LTDA" required>
+                    </label>
+                    <label>Valor da Operação (R$)
+                      <input type="number" step="0.01" id="ai-amount-input" value="1850.00" required>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Sugerir Classificação Contábil</button>
+                </form>
+                <div id="ai-suggestion-result" style="margin-top:14px; display:none;"></div>
+
+                <hr style="border:0; border-top:1px solid var(--border-subtle); margin:18px 0;">
+
+                <h4 class="card-title" style="margin-bottom:8px;">Extrator OCR Inteligente de Documentos</h4>
+                <label>Texto Bruto Extraído do Documento Fiscal / Boleto
+                  <textarea class="form-textarea mono" id="ai-ocr-raw-text">NOTA FISCAL DE SERVIÇOS ELETRÔNICA Nº 20260944
+PRESTADOR CNPJ: 12.345.678/0001-95
+DATA DE EMISSÃO: 15/10/2026
+VALOR TOTAL DO SERVIÇO: R$ 14.500,00</textarea>
+                </label>
+                <button type="button" class="btn btn-secondary" data-action="runOcrExtractionDemo">Extrair Campos Estruturados via IA</button>
+                <div id="ai-ocr-result-box" style="margin-top:12px; display:none;"></div>
+              </div>
+            </div>
+
+            <div class="col-6" style="display:flex; flex-direction:column; gap:16px;">
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Alertas Preditivos de Anomalias &amp; Duplicidades</h4>
+                    <div class="card-subtitle">Monitoramento de desvios estatísticos e pagamentos duplicados</div>
+                  </div>
+                </div>
+                <div class="card-body" id="ai-anomalies-container"></div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Resumo Executivo Mensal Assistido por IA</h4>
+                    <div class="card-subtitle">Minuta analítica com aviso de revisão obrigatória pelo contador (CRC)</div>
+                  </div>
+                </div>
+                <div class="card-body" id="ai-executive-summary-box">
+                  <div class="empty-state">Clique em "Gerar Resumo Executivo Narrativo" para redigir a análise do mês.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 10: PORTAL DO CLIENTE & COMUNICAÇÃO (svc-client-portal)
+             ================================================================== -->
+        <section id="view-portal" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Portal do Cliente, Entrega de Guias &amp; Chamados com SLA</h3>
+              <p>Publicação de guias de impostos com confirmação jurídica de leitura/download e atendimento estruturado.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="loadPortalData">Atualizar Portal</button>
+              <button type="button" class="btn btn-primary" data-action="openNewTicketModal">+ Abrir Novo Chamado</button>
+            </div>
+          </div>
+
+          <div class="grid-12">
+            <div class="card col-5">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Guias de Impostos e Folha Disponíveis ao Cliente</h4>
+                  <div class="card-subtitle">Rastreamento de visualização/download com IP e carimbo UTC</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div id="portal-guides-container" style="display:flex; flex-direction:column; gap:12px;"></div>
+              </div>
+            </div>
+
+            <div class="card col-7">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Central de Solicitações e Chamados com SLA</h4>
+                  <div class="card-subtitle">Atendimento multicanal vinculado à empresa ativa</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Categoria</th>
+                      <th>Assunto</th>
+                      <th>Prioridade</th>
+                      <th>Prazo SLA</th>
+                      <th>Status</th>
+                      <th>Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="portal-tickets-tbody"></tbody>
+                </table>
+              </div>
+
+              <div class="card-body" id="ticket-reply-box" style="display:none; border-top:1px solid var(--border-subtle);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <strong>Responder no Chamado</strong>
+                  <span class="badge badge-blue mono" id="reply-ticket-id-badge"></span>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" class="form-input" id="ticket-message-input" placeholder="Digite a orientação contábil para o cliente...">
+                  <button type="button" class="btn btn-primary" data-action="sendTicketReplyMessage">Enviar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 11: SEGURANÇA, IAM, LGPD E CERTIFICADOS (svc-security-iam)
+             ================================================================== -->
+        <section id="view-security" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Segurança IAM, Cofre ICP-Brasil AES-256-GCM, MFA &amp; Governança LGPD</h3>
+              <p>Gestão de identidades, custódia criptografada de certificados digitais A1, direitos de titulares LGPD e Audit Log imutável.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="openMfaSetupModal">Configurar MFA (TOTP)</button>
+              <button type="button" class="btn btn-primary" data-action="loadSecurityViewData">Atualizar Trilha de Auditoria</button>
+            </div>
+          </div>
+
+          <div class="grid-12" style="margin-bottom:16px;">
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Cofre Criptográfico de Certificados ICP-Brasil A1</h4>
+                  <div class="card-subtitle">Inspeção X.509 e criptografia autenticada AES-256-GCM</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="cert-upload-form">
+                  <div class="grid-two">
+                    <label>Arquivo Certificado (.pfx / .p12)
+                      <input type="file" id="cert-pfx-file" accept=".pfx,.p12" required>
+                    </label>
+                    <label>Senha de Instalação
+                      <input type="password" id="cert-pfx-password" placeholder="Senha do certificado A1" required>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Validar Cadeia ICP-Brasil e Criptografar no Cofre</button>
+                </form>
+
+                <div class="table-wrapper" style="margin-top:14px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Titular / CNPJ</th>
+                        <th>Tipo</th>
+                        <th>Vencimento</th>
+                        <th>Dias Restantes</th>
+                        <th>Alerta</th>
+                      </tr>
+                    </thead>
+                    <tbody id="cert-expirations-tbody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Governança LGPD (Art. 18) &amp; Operadores IAM</h4>
+                  <div class="card-subtitle">Registro de consentimento, requisições de titulares e controle de acesso</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="grid-two">
+                  <label>Tipo de Requisição do Titular (LGPD)
+                    <select id="lgpd-request-type">
+                      <option value="access_report">Relatório de Acesso a Dados Pessoais</option>
+                      <option value="rectification">Correção de Dados Incompletos/Inexatos</option>
+                      <option value="anonymization">Anonimização / Bloqueio (Art. 18, IV)</option>
+                      <option value="portability">Portabilidade de Dados</option>
+                    </select>
+                  </label>
+                  <label>Justificativa / Escopo da Solicitação
+                    <input type="text" id="lgpd-request-details" placeholder="Detalhe o escopo da solicitação LGPD...">
+                  </label>
+                </div>
+                <div class="action-group" style="margin-bottom:16px;">
+                  <button type="button" class="btn btn-secondary btn-sm" data-action="recordUserLgpdConsent">Registrar Aceite de Termos LGPD</button>
+                  <button type="button" class="btn btn-primary btn-sm" data-action="createLgpdSubjectRequest">Protocolar Requisição LGPD</button>
+                </div>
+
+                <hr style="border:0; border-top:1px solid var(--border-subtle); margin:14px 0;">
+
+                <form id="iam-user-form">
+                  <h4 class="card-title" style="margin-bottom:8px;">Cadastrar Novo Operador IAM</h4>
+                  <div class="grid-two">
+                    <label>E-mail Corporativo
+                      <input type="email" id="iam-user-email" placeholder="analista@escritorio.com.br" required>
+                    </label>
+                    <label>Senha Inicial (mín. 12 caracteres)
+                      <input type="password" id="iam-user-password" minlength="12" placeholder="••••••••••••" required>
+                    </label>
+                    <label>Perfil RBAC
+                      <select id="iam-user-role">
+                        <option value="analyst">Analista Contábil / Fiscal</option>
+                        <option value="bpo_operator">Operador BPO Financeiro</option>
+                        <option value="supervisor">Supervisor / Coordenador</option>
+                        <option value="client_user">Usuário do Cliente</option>
+                        <option value="viewer">Auditor / Leitura</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-secondary btn-sm">Criar Operador IAM</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h4 class="card-title">Trilha de Auditoria Imutável (Audit Log)</h4>
+                <div class="card-subtitle">Rastreabilidade completa de mutações, acessos, IP e correlação</div>
+              </div>
+              <select class="form-select" id="audit-action-filter" style="width:240px;">
+                <option value="">Todas as Ações Auditadas</option>
+                <option value="certificate_vault_uploaded">Upload de Certificado Digital</option>
+                <option value="POST">Mutações POST</option>
+                <option value="PATCH">Mutações PATCH</option>
+              </select>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp UTC</th>
+                    <th>Operador</th>
+                    <th>Ação Executada</th>
+                    <th>Recurso / Escopo</th>
+                    <th>Endereço IP</th>
+                    <th>Snapshot / Metadados</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-logs-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 12: INTELIGÊNCIA NFS-E & RETENÇÕES (svc-nfse-engine)
+             ================================================================== -->
+        <section id="view-nfse" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Suíte de Inteligência Fiscal NFS-e (Padrão Nacional RFB/SPED &amp; Multi-Layout)</h3>
+              <p>Extração estruturada de XML/ZIP, cálculo automático de retenções por competência (ISS, IRRF, INSS, CSRF) e espelho DANFSE.</p>
+            </div>
+            <div class="action-group">
+              <button type="button" class="btn btn-secondary" data-action="loadSampleData">Carregar XMLs de Demonstração</button>
+              <button type="button" data-nfse-export="excel" class="btn btn-secondary">Exportar Excel (.xlsx)</button>
+              <button type="button" data-nfse-export="csv" class="btn btn-secondary">Exportar CSV</button>
+              <button type="button" data-nfse-export="json" class="btn btn-secondary">Consolidado JSON</button>
+              <button type="button" class="btn btn-danger" id="btnClear">Limpar lote</button>
+            </div>
+          </div>
+
+          <p>Lote temporário: cada importação válida substitui a anterior. Exporte os resultados antes de recarregar a página, sair ou trocar de empresa. A sessão expira após 2 horas sem uso.</p>
+          <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Selecionar XML ou ZIP de NFS-e">
+            <input type="file" id="fileInput" multiple accept=".xml,.zip" class="hidden">
+            <strong>Importar Lote de Arquivos XML ou Pacotes ZIP de NFS-e</strong>
+            <p style="margin:4px 0 0; color:var(--muted); font-size:0.84rem;">
+              Arraste e solte seus arquivos <code>.xml</code> ou <code>.zip</code> aqui, ou clique para selecionar (Padrão Nacional v1.01, ABRASF, Paulistana e Municipais).
+            </p>
+            <div class="upload-progress hidden" id="uploadProgress" style="margin-top:12px;">
+              <div class="progress-bar-track"><div class="progress-bar-fill progress-fill" id="progressFill"></div></div>
+              <span id="uploadStatusText" style="font-size:0.8rem; color:var(--muted);">Processando documentos fiscais...</span>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Total de Notas Processadas</span>
+              <div class="kpi-value" id="kpiTotalNotas">0</div>
+              <div class="kpi-sub" id="kpiStatusSub">0 autorizadas | 0 canceladas</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Valor Bruto de Serviços (vServ)</span>
+              <div class="kpi-value" id="kpiValorBruto">R$ 0,00</div>
+              <div class="kpi-sub" id="kpiTicketMedio">Ticket Médio: R$ 0,00</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Total de Retenções Tributárias</span>
+              <div class="kpi-value" id="kpiTotalRetencoes" style="color:var(--warn);">R$ 0,00</div>
+              <div class="kpi-sub">ISS Retido + IRRF + INSS + CSRF + Outros</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Valor Líquido Conciliado (vLiq)</span>
+              <div class="kpi-value" id="kpiValorLiquido" style="color:var(--ok);">R$ 0,00</div>
+              <div class="kpi-sub" id="kpiAuditStatus">Aguardando processamento</div>
+            </div>
+          </div>
+
+          <div class="kpi-grid" style="margin-bottom:18px;">
+            <div class="kpi-card">
+              <span class="kpi-label">ISSQN Retido (Municipal)</span>
+              <div class="kpi-value" id="kpiISS">R$ 0,00</div>
+              <div class="kpi-sub">Retenção na fonte pelo tomador</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">IRRF Retido (Federal)</span>
+              <div class="kpi-value" id="kpiIRRF">R$ 0,00</div>
+              <div class="kpi-sub">Imposto de Renda na Fonte</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">INSS Retido (Previdenciário)</span>
+              <div class="kpi-value" id="kpiINSS">R$ 0,00</div>
+              <div class="kpi-sub">Cessão de mão de obra / empreitada</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">CSLL / PIS / COFINS (CSRF)</span>
+              <div class="kpi-value" id="kpiCSRF">R$ 0,00</div>
+              <div class="kpi-sub">Contribuições Sociais Retidas (4,65%)</div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Outras Retenções / Divergências</span>
+              <div class="kpi-value" id="kpiOutros">R$ 0,00</div>
+              <div class="kpi-sub">Diferença residual conciliada</div>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h4>Evolução de Faturamento Bruto vs Líquido por Competência</h4>
+              <div class="chart-wrapper"><canvas id="chartCompetencia"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <h4>Composição das Retenções Tributárias</h4>
+              <div class="chart-wrapper"><canvas id="chartTributos"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <h4>Top 5 Prestadores por Volume Financeiro</h4>
+              <div class="chart-wrapper"><canvas id="chartPrestadores"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <h4>Top 5 Municípios Emissores</h4>
+              <div class="chart-wrapper"><canvas id="chartMunicipios"></canvas></div>
+            </div>
+          </div>
+
+          <div id="retencoesModule" class="card" aria-labelledby="retencoesTitle" style="margin-bottom:18px;">
+            <div class="card-header">
+              <div>
+                <h4 id="retencoesTitle" class="card-title">Retenções por Competência</h4>
+                <div id="retencoesHelp" class="card-subtitle">Consulte os tributos retidos e os valores declarados em cada nota por competência.</div>
+              </div>
+              <div class="action-group">
+                <label for="retencoesCompetencia" style="margin:0; display:flex; align-items:center; gap:8px;">
+                  <span>Competência</span>
+                  <select id="retencoesCompetencia" class="form-select" aria-describedby="retencoesHelp" style="width:190px;">
+                    <option value="">Todas as competências</option>
+                  </select>
+                </label>
+                <button id="btnClearRetencoesFilter" type="button" class="btn btn-secondary btn-sm" disabled>Limpar filtro</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px;">
+                <p id="retencoesStatus" class="text-muted" role="status" style="margin:0; font-size:0.84rem;">Carregando retenções...</p>
+                <button id="btnRetryRetencoes" type="button" class="btn btn-secondary btn-sm" hidden>Tentar novamente</button>
+              </div>
+              <div id="retencoesResults" hidden>
+                <dl class="kpi-grid" style="margin:0 0 12px 0;">
+                  <div class="kpi-card"><dt class="kpi-label">Total declarado</dt><dd id="retencoesTotalDeclarado" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">Tributos identificados</dt><dd id="retencoesTotalIdentificado" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">ISS retido</dt><dd id="retencoesIss" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">INSS retido</dt><dd id="retencoesInss" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">PIS retido</dt><dd id="retencoesPis" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">COFINS retida</dt><dd id="retencoesCofins" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">IRRF retido</dt><dd id="retencoesIrrf" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                  <div class="kpi-card"><dt class="kpi-label">CSLL retida</dt><dd id="retencoesCsll" class="kpi-value" style="margin:0;">R$ 0,00</dd></div>
+                </dl>
+                <p id="retencoesDifference" class="text-muted" style="font-size:0.8rem; margin:0 0 12px 0;"></p>
+                <div class="table-wrapper" role="region" aria-label="Notas com retenções; role horizontalmente para ver todos os tributos" tabindex="0">
+                  <table class="data-table">
+                    <caption id="retencoesCaption" style="text-align:left; padding:8px 12px; font-weight:600; color:var(--muted); font-size:0.8rem;">Notas com retenções · valores em reais (R$)</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">NFS-e</th>
+                        <th scope="col">Competência</th>
+                        <th scope="col">Tomador</th>
+                        <th scope="col">ISS</th>
+                        <th scope="col">INSS</th>
+                        <th scope="col">PIS</th>
+                        <th scope="col">COFINS</th>
+                        <th scope="col">IRRF</th>
+                        <th scope="col">CSLL</th>
+                        <th scope="col">Total declarado</th>
+                        <th scope="col">Tributos identificados</th>
+                      </tr>
+                    </thead>
+                    <tbody id="retencoesTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h4 class="card-title">Relatório Analítico de Notas Fiscais de Serviço (NFS-e)</h4>
+                <div class="card-subtitle">Clique em DANFSE para inspecionar o espelho fiscal, dados bancários/PIX extraídos e auditoria contábil</div>
+              </div>
+            </div>
+            <div class="filter-bar" style="margin:12px 18px;">
+              <input type="text" class="form-input" id="filterSearch" placeholder="Buscar por Nº NFS-e, Chave, CNPJ, Razão Social...">
+              <select class="form-select" id="filterCompetencia">
+                <option value="">Todas as Competências</option>
+              </select>
+              <select class="form-select" id="filterPrestador">
+                <option value="">Todos os Prestadores</option>
+              </select>
+              <select class="form-select" id="filterStatus">
+                <option value="">Todos os Status de Auditoria</option>
+                <option value="CONCILIADO">Conciliado (100%)</option>
+                <option value="ALERTA">Com Alerta</option>
+                <option value="DIVERGENTE">Com Divergência</option>
+              </select>
+              <button type="button" class="btn btn-secondary btn-sm" id="btnResetFilters">Limpar Filtros</button>
+            </div>
+
+            <div class="table-wrapper">
+              <table class="data-table" id="notesTable">
+                <thead>
+                  <tr>
+                    <th>Nº NFS-e</th>
+                    <th>Emissão / Comp.</th>
+                    <th>Prestador de Serviço</th>
+                    <th>Tomador</th>
+                    <th>Cód. Trib. / Serviço</th>
+                    <th class="text-right">Valor Bruto</th>
+                    <th class="text-right">Retenções</th>
+                    <th class="text-right">Valor Líquido</th>
+                    <th>PIX / Banco</th>
+                    <th>Auditoria</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="notesTableBody"></tbody>
+              </table>
+              <div class="empty-state" id="emptyState">
+                Nenhuma NFS-e carregada na sessão. Envie arquivos XML/ZIP acima ou clique em "Carregar XMLs de Demonstração".
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 13: CONFERIDOR NF-E, ICMS-ST, DIFAL & ZIPS (svc-nfe-difal)
+             ================================================================== -->
+        <section id="view-nfe" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Conferidor Fiscal NF-e (Modelo 55), ICMS-ST, DIFAL &amp; Conciliação de ZIPs</h3>
+              <p>Apuração de ICMS-ST e DIFAL por destinação de mercadoria, cruzamento de NCM/MVA e conciliação de lotes ZIP Cliente × Portal.</p>
+            </div>
+            <div class="action-group">
+              <a href="/api/v1/nfe/export/report.xlsx" class="btn btn-secondary" download>Exportar Planilha (.xlsx)</a>
+              <a href="/api/v1/nfe/export/report.json" class="btn btn-secondary" download>Exportar JSON</a>
+            </div>
+          </div>
+
+          <div class="grid-12" style="margin-bottom:16px;">
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">1. Processar Lote de NF-e (XML / ZIP) &amp; Cruzar NCM/ST</h4>
+                  <div class="card-subtitle">Extração de itens, CFOP, CST/CSOSN, ICMS, BC ST, IPI, PIS e COFINS</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="nfe-process-form">
+                  <label>Arquivos XML ou Pacote ZIP de NF-e
+                    <input type="file" id="nfe-files-input" name="files" multiple accept=".xml,.zip" required>
+                  </label>
+                  <button type="submit" class="btn btn-primary">Processar NF-e e Apurar ST/DIFAL</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">2. Conciliação de Pacotes ZIP (Cliente × Portal SEFAZ)</h4>
+                  <div class="card-subtitle">Identifica notas faltantes, exclusivas e divergências de valor &gt; R$ 0,01</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="nfe-zips-form">
+                  <div class="grid-two">
+                    <label>ZIP do Cliente / Escrituração
+                      <input type="file" id="nfe-zip-client" name="client_zip" accept=".zip" required>
+                    </label>
+                    <label>ZIP do Portal Fiscal / SEFAZ
+                      <input type="file" id="nfe-zip-portal" name="portal_zip" accept=".zip" required>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Comparar Pacotes ZIP</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-12" style="margin-bottom:16px;">
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">3. Alterar Destinação de Mercadoria (Recálculo ST/DIFAL)</h4>
+                  <div class="card-subtitle">Atualiza destinação por item ou lote de NCM</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="nfe-destination-form">
+                  <div class="grid-two">
+                    <label>NCM ou Chave do Item
+                      <input type="text" id="nfe-dest-ncm" placeholder="Ex.: 84713012" required>
+                    </label>
+                    <label>Destinação Fiscal
+                      <select id="nfe-dest-value">
+                        <option value="Comercialização">Comercialização / Revenda</option>
+                        <option value="Uso e Consumo">Uso e Consumo (DIFAL)</option>
+                        <option value="Imobilizado">Ativo Imobilizado</option>
+                        <option value="Industrialização">Industrialização</option>
+                      </select>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-secondary">Aplicar Destinação e Reprocessar NCM</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="card col-6">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">4. Confronto Documental Lista de Produtos (.txt) × Relatório (.pdf)</h4>
+                  <div class="card-subtitle">Auditoria cruzada de inventário e catálogo fiscal</div>
+                </div>
+              </div>
+              <div class="card-body">
+                <form id="nfe-docs-form">
+                  <div class="grid-two">
+                    <label>Arquivo de Produtos (.txt)
+                      <input type="file" id="nfe-txt-file" name="txt_file" accept=".txt" required>
+                    </label>
+                    <label>Relatório Fiscal (.pdf)
+                      <input type="file" id="nfe-pdf-file" name="pdf_file" accept=".pdf" required>
+                    </label>
+                  </div>
+                  <button type="submit" class="btn btn-secondary">Executar Confronto TXT × PDF</button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="nfe-results-card">
+            <div class="card-header">
+              <div>
+                <h4 class="card-title">Resultado da Conferência NF-e / Comparação de Lotes</h4>
+                <div class="card-subtitle" id="nfe-results-subtitle">Envie arquivos acima para visualizar os itens apurados ou divergências entre pacotes ZIP</div>
+              </div>
+            </div>
+            <div class="card-body" id="nfe-results-container">
+              <div class="empty-state">Nenhum lote NF-e ou comparação ZIP processada ainda nesta sessão.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 14: FERRAMENTAS PDF (svc-pdf-tools)
+             ================================================================== -->
+        <section id="view-pdf" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Ferramentas PDF Contábeis &amp; Fiscais</h3>
+              <p>Mesclagem, divisão inteligente, reordenação/exclusão de páginas, rotação, reparo de PDFs corrompidos e numeração oficial.</p>
+            </div>
+            <div class="action-group">
+              <div class="status-pill" id="api-status">
+                <span class="status-dot"></span>
+                <span id="api-status-text">Verificando API PDF...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pdf-tools-layout">
+            <div class="pdf-tool-list" role="tablist" aria-label="Ferramentas PDF">
+              <button type="button" class="pdf-tool-btn is-active" data-tool="mesclar">1. Mesclar PDFs</button>
+              <button type="button" class="pdf-tool-btn" data-tool="dividir">2. Dividir PDF</button>
+              <button type="button" class="pdf-tool-btn" data-tool="organizar">3. Organizar Páginas</button>
+              <button type="button" class="pdf-tool-btn" data-tool="girar">4. Girar Páginas</button>
+              <button type="button" class="pdf-tool-btn" data-tool="reparar">5. Reparar / Desbloquear</button>
+              <button type="button" class="pdf-tool-btn" data-tool="numerar">6. Numerar Páginas</button>
+            </div>
+
+            <div>
+              <!-- 1. MESCLAR -->
+              <section class="card tool-panel" data-panel="mesclar">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Mesclar Arquivos PDF</h4>
+                    <div class="card-subtitle">Combine dois ou mais demonstrativos ou livros fiscais em um único documento na ordem desejada</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="merge-form" class="tool-form" action="/api/v1/pdf/merge" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="merge-files">
+                      <label for="merge-files">Selecione 2 ou mais arquivos PDF
+                        <input id="merge-files" class="file-input" type="file" name="files" accept=".pdf,application/pdf" multiple required>
+                      </label>
+                      <small style="color:var(--muted);" data-file-summary="merge-files">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="merge-files"></ul>
+                    </div>
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Mesclar PDFs</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+
+              <!-- 2. DIVIDIR -->
+              <section class="card tool-panel" data-panel="dividir" hidden>
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Dividir Arquivo PDF</h4>
+                    <div class="card-subtitle">Extraia páginas individuais, intervalos específicos, blocos fixos ou divida por tamanho em MB</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="split-form" class="tool-form" action="/api/v1/pdf/split" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="split-file">
+                      <label for="split-file">Arquivo PDF de origem
+                        <input id="split-file" class="file-input" type="file" name="file" accept=".pdf,application/pdf" required>
+                      </label>
+                      <small style="color:var(--muted);" data-file-summary="split-file">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="split-file"></ul>
+                    </div>
+
+                    <label for="split-mode">Modo de divisão
+                      <select id="split-mode" name="mode">
+                        <option value="every_page">Cada página em um PDF separado (.zip)</option>
+                        <option value="range">Extrair intervalo único (da página X até Y)</option>
+                        <option value="ranges">Múltiplos intervalos personalizados (ex.: 1-3, 5, 8-10)</option>
+                        <option value="count">A cada N páginas</option>
+                        <option value="size">Por tamanho máximo aproximado (MB)</option>
+                      </select>
+                    </label>
+
+                    <div class="grid-two" data-split-mode="range" hidden>
+                      <label for="split-first-page">Primeira página
+                        <input id="split-first-page" type="number" name="first_page" min="1" value="1" disabled required>
+                      </label>
+                      <label for="split-last-page">Última página
+                        <input id="split-last-page" type="number" name="last_page" min="1" value="2" disabled required>
+                      </label>
+                    </div>
+
+                    <div data-split-mode="ranges" hidden>
+                      <label for="split-ranges">Intervalos (ex.: 1-3, 5, 8-10)
+                        <input id="split-ranges" type="text" name="ranges_str" placeholder="1-3, 4-6" disabled required>
+                      </label>
+                    </div>
+
+                    <div data-split-mode="count" hidden>
+                      <label for="split-count">Páginas por arquivo gerado
+                        <input id="split-count" type="number" name="pages_per_file" min="1" value="2" disabled required>
+                      </label>
+                    </div>
+
+                    <div data-split-mode="size" hidden>
+                      <label for="split-size">Tamanho máximo por parte (MB)
+                        <input id="split-size" type="number" name="target_size_mb" min="0.1" step="0.1" value="1.0" disabled required>
+                      </label>
+                    </div>
+
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Dividir PDF</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+
+              <!-- 3. ORGANIZAR -->
+              <section class="card tool-panel" data-panel="organizar" hidden>
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Organizar Páginas do PDF</h4>
+                    <div class="card-subtitle">Reordene, exclua, duplique, inverta a ordem ou monte uma sequência personalizada</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="organize-form" class="tool-form" action="/api/v1/pdf/organize" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="organize-files">
+                      <label for="organize-files">Arquivo(s) PDF
+                        <input id="organize-files" class="file-input" type="file" name="files" accept=".pdf,application/pdf" required>
+                      </label>
+                      <small id="organize-file-help" style="color:var(--muted); display:block;">Um arquivo por vez para esta operação.</small>
+                      <small style="color:var(--muted);" data-file-summary="organize-files">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="organize-files"></ul>
+                    </div>
+
+                    <label for="organize-mode">Operação de organização
+                      <select id="organize-mode" name="mode">
+                        <option value="reorder">Reordenar páginas (ex.: 3, 1, 2)</option>
+                        <option value="delete">Excluir páginas específicas (ex.: 2, 4)</option>
+                        <option value="duplicate">Duplicar uma página</option>
+                        <option value="reverse">Inverter ordem de todas as páginas</option>
+                        <option value="custom">Montagem avançada (combinar páginas e rotações)</option>
+                      </select>
+                    </label>
+
+                    <div data-organize-mode="reorder">
+                      <label for="organize-order">Nova ordem das páginas (separadas por vírgula)
+                        <input id="organize-order" type="text" name="page_order_str" placeholder="2, 1, 3" required>
+                      </label>
+                    </div>
+
+                    <div data-organize-mode="delete" hidden>
+                      <label for="organize-delete">Páginas a excluir (separadas por vírgula)
+                        <input id="organize-delete" type="text" name="pages_to_delete_str" placeholder="2, 5" disabled required>
+                      </label>
+                    </div>
+
+                    <div class="grid-two" data-organize-mode="duplicate" hidden>
+                      <label for="organize-dup-page">Número da página a duplicar
+                        <input id="organize-dup-page" type="number" name="duplicate_page_num" min="1" value="1" disabled required>
+                      </label>
+                      <label for="organize-dup-copies">Quantidade de cópias extras
+                        <input id="organize-dup-copies" type="number" name="copies" min="1" max="50" value="1" disabled required>
+                      </label>
+                    </div>
+
+                    <div data-organize-mode="custom" hidden>
+                      <input type="hidden" name="custom_json" value="[]" disabled>
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong>Construtor de Sequência de Páginas</strong>
+                        <button type="button" id="add-page-item" class="btn btn-sm btn-secondary">+ Adicionar Página</button>
+                      </div>
+                      <div id="custom-builder" style="display:grid; gap:8px; margin-bottom:12px;"></div>
+                    </div>
+
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Organizar PDF</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+
+              <!-- 4. GIRAR -->
+              <section class="card tool-panel" data-panel="girar" hidden>
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Girar Páginas do PDF</h4>
+                    <div class="card-subtitle">Corrija a orientação de páginas digitalizadas (90°, 180° ou 270°)</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="rotate-form" class="tool-form" action="/api/v1/pdf/rotate" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="rotate-file">
+                      <label for="rotate-file">Arquivo PDF
+                        <input id="rotate-file" class="file-input" type="file" name="file" accept=".pdf,application/pdf" required>
+                      </label>
+                      <small style="color:var(--muted);" data-file-summary="rotate-file">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="rotate-file"></ul>
+                    </div>
+
+                    <div class="grid-two">
+                      <label for="rotate-angle">Ângulo de rotação
+                        <select id="rotate-angle" name="angle">
+                          <option value="90">90° no sentido horário</option>
+                          <option value="180">180° (inverter verticalmente)</option>
+                          <option value="270">270° (90° anti-horário)</option>
+                        </select>
+                      </label>
+                      <label for="rotate-pages">Páginas (vazio = todas, ou ex.: 1-3, 5)
+                        <input id="rotate-pages" type="text" name="pages_str" placeholder="Todas as páginas">
+                      </label>
+                    </div>
+
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Girar PDF</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+
+              <!-- 5. REPARAR -->
+              <section class="card tool-panel" data-panel="reparar" hidden>
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Reparar ou Desbloquear PDF</h4>
+                    <div class="card-subtitle">Reconstrua tabelas XREF corrompidas ou remova senha conhecida com pikepdf</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="repair-form" class="tool-form" action="/api/v1/pdf/repair" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="repair-file">
+                      <label for="repair-file">Arquivo PDF para reparo
+                        <input id="repair-file" class="file-input" type="file" name="file" accept=".pdf,application/pdf" required>
+                      </label>
+                      <small style="color:var(--muted);" data-file-summary="repair-file">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="repair-file"></ul>
+                    </div>
+
+                    <label for="repair-password">Senha do PDF (opcional, caso o arquivo esteja protegido)
+                      <div style="display:flex; gap:8px;">
+                        <input id="repair-password" type="password" name="password" placeholder="Deixe em branco se não houver senha">
+                        <button type="button" class="btn btn-secondary btn-sm" data-toggle-password="repair-password">Mostrar</button>
+                      </div>
+                    </label>
+
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Reparar PDF</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+
+              <!-- 6. NUMERAR -->
+              <section class="card tool-panel" data-panel="numerar" hidden>
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title" tabindex="-1">Numerar Páginas do PDF</h4>
+                    <div class="card-subtitle">Insira numeração contábil/societária configurável com pré-visualização em tempo real</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="number-form" class="tool-form" action="/api/v1/pdf/number" method="post" enctype="multipart/form-data" novalidate>
+                    <div class="file-picker-box" data-dropzone-for="number-file">
+                      <label for="number-file">Arquivo PDF para numerar
+                        <input id="number-file" class="file-input" type="file" name="file" accept=".pdf,application/pdf" required>
+                      </label>
+                      <small style="color:var(--muted);" data-file-summary="number-file">Nenhum arquivo selecionado.</small>
+                      <ul class="file-list" data-file-list="number-file"></ul>
+                    </div>
+
+                    <div class="grid-12">
+                      <div class="col-8">
+                        <div class="grid-two">
+                          <label for="number-position">Posição na página
+                            <select id="number-position" name="position">
+                              <option value="bottom-center">Rodapé — Centro</option>
+                              <option value="bottom-right">Rodapé — Direita</option>
+                              <option value="bottom-left">Rodapé — Esquerda</option>
+                              <option value="top-center">Cabeçalho — Centro</option>
+                              <option value="top-right">Cabeçalho — Direita</option>
+                              <option value="top-left">Cabeçalho — Esquerda</option>
+                            </select>
+                          </label>
+                          <label for="number-first">Primeiro número
+                            <input id="number-first" type="number" name="first_number" min="1" value="1" required>
+                          </label>
+                          <label for="number-template">Modelo de texto ({current}, {total}, {document_total})
+                            <input id="number-template" type="text" name="template" value="Página {current} de {total}" required>
+                          </label>
+                          <label for="number-font">Fonte tipográfica
+                            <select id="number-font" name="font_name">
+                              <option value="Helvetica">Helvetica (Sans-serif)</option>
+                              <option value="Times-Roman">Times Roman (Serif)</option>
+                              <option value="Courier">Courier (Monospace)</option>
+                            </select>
+                          </label>
+                          <label for="number-font-size">Tamanho da fonte (pt)
+                            <input id="number-font-size" type="number" name="font_size" min="6" max="72" value="10" required>
+                          </label>
+                          <label for="number-margin">Margem da borda (pt)
+                            <input id="number-margin" type="number" name="margin" min="10" max="120" value="24" required>
+                          </label>
+                        </div>
+                      </div>
+                      <div class="col-4" style="text-align:center;">
+                        <small style="color:var(--muted); font-weight:600;">Pré-visualização na Folha</small>
+                        <div class="page-preview-sheet">
+                          <div id="number-preview-text" class="page-number-preview bottom-center">Página 1 de 3</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="action-group">
+                      <button type="submit" class="btn btn-primary"><span data-button-label>Numerar PDF</span></button>
+                      <button type="reset" class="btn btn-secondary">Limpar</button>
+                    </div>
+                    <div class="form-status" data-form-status hidden></div>
+                  </form>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================================================================
+             VIEW 15: AUDITORIA TRIBUTÁRIA FEDERAL (svc-federal-tax-audit)
+             ================================================================== -->
+        <section id="view-tax-audit" class="view-section">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3>Auditoria de Impostos Federais &amp; Cruzamento Digital (RFB / NBC TA 500)</h3>
+              <p>Cruzamento eletrônico entre NFS-e SPED, Livro de Registro de Serviços, PIS/COFINS, IRPJ/CSLL (LC 224/2025) e DARFs.</p>
+            </div>
+            <div class="action-group">
+              <span class="badge badge-neutral mono" id="snapshot-timestamp">Snapshot: Ativo</span>
+              <span class="badge badge-warning" id="risk-badge">Auditoria Pronta</span>
+              <button type="button" class="btn btn-secondary" id="btn-refresh" data-action="reloadDataFromDisk">Recarregar Dados</button>
+              <button type="button" class="btn btn-primary" data-audit-tab="report">Laudo Oficial NBC TA 500</button>
+            </div>
+          </div>
+
+          <div id="network-error-banner" class="alert-box danger" style="display:none; margin-bottom:16px;">
+            <strong>Atenção:</strong> <span id="network-error-msg"></span>
+          </div>
+
+          <div class="sub-tabs" role="tablist">
+            <button type="button" class="tab-btn active" id="tab-btn-dashboard" data-audit-tab="dashboard">Visão Executiva &amp; Achados</button>
+            <button type="button" class="tab-btn" id="tab-btn-documents" data-audit-tab="documents">Base Documental &amp; Upload</button>
+            <button type="button" class="tab-btn" id="tab-btn-pis-cofins" data-audit-tab="pis-cofins">Cruzamento PIS / COFINS</button>
+            <button type="button" class="tab-btn" id="tab-btn-irpj-csll" data-audit-tab="irpj-csll">Apuração IRPJ / CSLL (LC 224)</button>
+            <button type="button" class="tab-btn" id="tab-btn-nfse" data-audit-tab="nfse">Malha Analítica NFS-e × Livro</button>
+            <button type="button" class="tab-btn" id="tab-btn-darfs" data-audit-tab="darfs">Auditoria de DARFs</button>
+            <button type="button" class="tab-btn" id="tab-btn-simulator" data-audit-tab="simulator">Simulador Passivo &amp; PER/DCOMP</button>
+            <button type="button" class="tab-btn" id="tab-btn-report" data-audit-tab="report">Laudo Técnico Markdown</button>
+          </div>
+
+          <!-- ABA 1: DASHBOARD & ACHADOS -->
+          <div id="view-audit-dashboard" class="tab-content active">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <span class="kpi-label">Faturamento Auditado (NFS-e)</span>
+                <div class="kpi-value" id="kpi-fat-val">R$ 0,00</div>
+                <div class="kpi-sub">Total de notas ativas no período</div>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-label">Divergência / Notas Ausentes no Livro</span>
+                <div class="kpi-value" id="kpi-omissao-val" style="color:var(--err);">R$ 0,00</div>
+                <div class="kpi-sub" id="kpi-omissao-footer">Segregação por corte temporal do Livro</div>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-label">Crédito Previdenciário INSS (11%)</span>
+                <div class="kpi-value" id="kpi-credito-val" style="color:var(--ok);">R$ 0,00</div>
+                <div class="kpi-sub">Retenções em cessão de mão de obra</div>
+              </div>
+              <div class="kpi-card">
+                <span class="kpi-label">IRRF Retido na Fonte</span>
+                <div class="kpi-value" id="kpi-irrf-val" style="color:var(--info);">R$ 0,00</div>
+                <div class="kpi-sub">Dedutível do IRPJ trimestral</div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Apontamentos e Achados Técnicos de Auditoria</h4>
+                  <div class="card-subtitle">Classificados por severidade, impacto financeiro, base legal e recomendação</div>
+                </div>
+              </div>
+              <div class="card-body" id="findings-container"></div>
+            </div>
+          </div>
+
+          <!-- ABA 2: BASE DOCUMENTAL & UPLOAD -->
+          <div id="view-audit-documents" class="tab-content">
+            <div class="grid-12" style="margin-bottom:16px;">
+              <div class="card col-6">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Importar Peças Fiscais para o Workspace da Empresa</h4>
+                    <div class="card-subtitle">Demonstrativos PDF (PIS, COFINS, IRPJ, CSLL, Livro, DARFs) ou JSON de NFS-e</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="tax-audit-upload-form">
+                    <div class="grid-two">
+                      <label>Categoria Documental
+                        <select id="tax-audit-upload-category" name="category">
+                          <option value="pis_cofins">Demonstrativos PIS / COFINS (.pdf)</option>
+                          <option value="irpj_csll">Demonstrativos IRPJ / CSLL (.pdf)</option>
+                          <option value="livro">Livro Fiscal de Serviços (.pdf)</option>
+                          <option value="darfs">Comprovantes de Arrecadação DARF (.pdf)</option>
+                          <option value="nfse">Consolidado NFS-e (.json)</option>
+                        </select>
+                      </label>
+                      <label>Arquivo(s)
+                        <input type="file" id="tax-audit-upload-files" multiple accept=".pdf,.json" required>
+                      </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enviar para Custódia da Auditoria</button>
+                  </form>
+                </div>
+              </div>
+
+              <div class="card col-6">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Configurar Cobertura Temporal do Livro Fiscal</h4>
+                    <div class="card-subtitle">Define a data de corte para segregar omissões reais de emissões pós-fechamento</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <form id="tax-audit-ledger-form">
+                    <div class="grid-two">
+                      <label>Início da Cobertura do Livro
+                        <input type="date" id="ledger-start-date" value="2026-01-01" required>
+                      </label>
+                      <label>Fim da Cobertura (Corte Temporal)
+                        <input type="date" id="ledger-end-date" value="2026-08-31" required>
+                      </label>
+                    </div>
+                    <button type="submit" class="btn btn-secondary">Atualizar Corte Temporal e Reprocessar</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="documents-grid" id="documents-grid"></div>
+          </div>
+
+          <!-- ABA 3: CRUZAMENTO PIS/COFINS -->
+          <div id="view-audit-pis-cofins" class="tab-content">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Cruzamento Mensal de PIS (0,65%) e COFINS (3,00%)</h4>
+                  <div class="card-subtitle">Confronto entre Faturamento NFS-e, Receita Declarada nos Demonstrativos e DARFs Pagos</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Competência</th>
+                      <th class="num">Qtd NFS-e</th>
+                      <th class="num">Faturamento NFS-e</th>
+                      <th class="num">Receita Declarada</th>
+                      <th class="num">Divergência</th>
+                      <th class="num">PIS Apurado</th>
+                      <th class="num">PIS Pago (DARF)</th>
+                      <th class="num">COFINS Apurado</th>
+                      <th class="num">COFINS Pago (DARF)</th>
+                      <th>Situação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-pis-cofins"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 4: CRUZAMENTO IRPJ/CSLL -->
+          <div id="view-audit-irpj-csll" class="tab-content">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Apuração Trimestral de IRPJ e CSLL — Lei Complementar nº 224/2025</h4>
+                  <div class="card-subtitle">Verifica presunção de 32% até R$ 1.250.000,00/trimestre e majoração de 35,2% sobre o excedente</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Trimestre</th>
+                      <th>Competências</th>
+                      <th class="num">Faturamento NFS-e</th>
+                      <th class="num">Receita Declarada</th>
+                      <th class="num">Base IRPJ (PDF)</th>
+                      <th class="num">Base Recalculada (LC 224)</th>
+                      <th class="num">IRRF Retido</th>
+                      <th class="num">IRPJ Declarado</th>
+                      <th class="num">IRPJ Pago</th>
+                      <th class="num">CSLL Declarada</th>
+                      <th class="num">CSLL Paga</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-irpj-csll"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 5: MALHA ANALÍTICA NFS-E -->
+          <div id="view-audit-nfse" class="tab-content">
+            <div class="filter-bar">
+              <input type="text" class="form-input" id="input-search-nfse" placeholder="Buscar por Nº da Nota, Tomador ou CNPJ...">
+              <button type="button" class="btn btn-sm btn-secondary active" id="btn-filter-all" data-nfse-filter="all">Todas</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="btn-filter-missing" data-nfse-filter="missing">Ausentes no Livro</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="btn-filter-retention" data-nfse-filter="retention">Com Retenções</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="btn-filter-status101" data-nfse-filter="status101">Substituídas (Status 101)</button>
+            </div>
+            <div class="card">
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nº NFS-e</th>
+                      <th>Competência</th>
+                      <th>Emissão</th>
+                      <th>Tomador</th>
+                      <th>CNPJ Tomador</th>
+                      <th class="num">Valor Serviço</th>
+                      <th class="num">INSS Retido</th>
+                      <th class="num">IRRF Retido</th>
+                      <th class="num">CSRF (4,65%)</th>
+                      <th>Status XML</th>
+                      <th>Situação no Livro Fiscal</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-nfse"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 6: AUDITORIA DE DARFS -->
+          <div id="view-audit-darfs" class="tab-content">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Comprovantes de Arrecadação Federal (DARFs Extraídos)</h4>
+                  <div class="card-subtitle">Reconciliação de principal, multa, juros Selic e quotas (Lei 9.430/96)</div>
+                </div>
+              </div>
+              <div class="table-wrapper">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nº Documento</th>
+                      <th>Pág.</th>
+                      <th>Cód. Receita</th>
+                      <th>Tributo / Descrição</th>
+                      <th>Extensão</th>
+                      <th>PA</th>
+                      <th>Vencimento</th>
+                      <th>Arrecadação</th>
+                      <th class="num">Principal</th>
+                      <th class="num">Multa</th>
+                      <th class="num">Juros</th>
+                      <th class="num">Total Pago</th>
+                      <th>Modalidade</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-darfs"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 7: SIMULADOR TRIBUTÁRIO -->
+          <div id="view-audit-simulator" class="tab-content">
+            <div class="grid-12">
+              <div class="card col-5">
+                <div class="card-header">
+                  <div>
+                    <h4 class="card-title">Parâmetros de Simulação de Passivo Fiscal</h4>
+                    <div class="card-subtitle">Ajuste alíquotas para simular cenários de autuação ou autorregularização</div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <label>Percentual de Presunção Lucro Presumido: <strong id="lbl-presuncao">32.0%</strong>
+                    <input type="range" id="slider-presuncao" min="8" max="38.4" step="0.2" value="32.0">
+                  </label>
+                  <label>Multa de Ofício / Mora RFB: <strong id="lbl-multa">75.0%</strong>
+                    <input type="range" id="slider-multa" min="0" max="150" step="5" value="75.0">
+                  </label>
+                  <label>Taxa Selic Acumulada no Período: <strong id="lbl-selic">10.5%</strong>
+                    <input type="range" id="slider-selic" min="0" max="35" step="0.5" value="10.5">
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-7" style="display:grid; gap:16px;">
+                <div class="card">
+                  <div class="card-header">
+                    <h4 class="card-title">Eixo 1 — Passivo Tributário Bruto sobre Omissão de Receita</h4>
+                  </div>
+                  <div class="card-body">
+                    <div class="danfse-row"><span>Base de Faturamento Divergente:</span> <strong id="sim-base-fat">R$ 0,00</strong></div>
+                    <div class="danfse-row"><span>Tributos Principais (IRPJ + CSLL + PIS + COFINS):</span> <strong id="sim-tributos">R$ 0,00</strong></div>
+                    <div class="danfse-row"><span>Multa Fiscal Simulada:</span> <strong id="sim-multa" style="color:var(--err);">R$ 0,00</strong></div>
+                    <div class="danfse-row"><span>Juros Equivalentes à Taxa Selic:</span> <strong id="sim-juros" style="color:var(--warn);">R$ 0,00</strong></div>
+                    <div class="danfse-row" style="font-size:1rem; padding-top:8px;">
+                      <strong>Exposição / Passivo Tributário Bruto:</strong>
+                      <strong id="sim-passivo-bruto" style="color:var(--err);">R$ 0,00</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-header">
+                    <h4 class="card-title">Eixo 2 — Conta Gráfica Previdenciária (INSS Retido vs PER/DCOMP)</h4>
+                  </div>
+                  <div class="card-body">
+                    <div class="danfse-row"><span>Total de INSS Retido na Fonte (NFS-e):</span> <strong id="sim-credito-inss-ret" style="color:var(--ok);">R$ 0,00</strong></div>
+                    <div class="danfse-row"><span>DARF Previdenciário (Cód. 1082) Recolhido:</span> <strong id="sim-darf-1082">R$ 0,00</strong></div>
+                    <div class="danfse-row" style="font-size:1rem; padding-top:8px;">
+                      <strong>Saldo Credor Potencial para PER/DCOMP Web:</strong>
+                      <strong id="sim-credito-inss-saldo" style="color:var(--ok);">R$ 0,00</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABA 8: LAUDO TÉCNICO MARKDOWN -->
+          <div id="view-audit-report" class="tab-content">
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h4 class="card-title">Relatório Técnico Preliminar de Conciliação Fiscal Digital (NBC TA 500 / 230)</h4>
+                  <div class="card-subtitle">Documento estruturado para revisão societária e contábil</div>
+                </div>
+                <div class="action-group">
+                  <button type="button" class="btn btn-secondary btn-sm" data-action="printAuditReport">Imprimir / PDF</button>
+                  <button type="button" class="btn btn-primary btn-sm" data-action="copyMarkdownReport">Copiar Markdown</button>
+                </div>
+              </div>
+              <div class="card-body" id="official-report-content"></div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       MODAIS DO SISTEMA UNIFICADO
+       ======================================================================== -->
+
+  <!-- MODAL 1: CADASTRAR NOVA EMPRESA -->
+  <div id="modal-create-company" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Cadastrar Nova Empresa Cliente</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-create-company">&times;</button>
+      </div>
+      <form id="form-create-company">
+        <div class="modal-body">
+          <label>Razão Social
+            <input type="text" id="modal-comp-corp-name" placeholder="Ex.: Indústria Metalúrgica Alfa Ltda" required>
+          </label>
+          <label>Nome Fantasia
+            <input type="text" id="modal-comp-trade-name" placeholder="Ex.: Alfa Metais">
+          </label>
+          <div class="grid-two">
+            <label>CNPJ ou CPF (validação Módulo 11)
+              <input type="text" id="modal-comp-tax-id" placeholder="11.222.333/0001-81" required>
+            </label>
+            <label>Regime Tributário
+              <select id="modal-comp-regime">
+                <option value="simples_nacional">Simples Nacional</option>
+                <option value="lucro_presumido">Lucro Presumido</option>
+                <option value="lucro_real">Lucro Real</option>
+                <option value="mei">MEI</option>
+              </select>
+            </label>
+          </div>
+          <label>Código CNAE Principal
+            <input type="text" id="modal-comp-cnae" value="6201-5/01">
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-create-company">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Validar CNPJ e Cadastrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SOLICITAR DOCUMENTOS EM LOTE -->
+  <div id="modal-batch-request" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Disparo de Solicitação de Documentos em Lote</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-batch-request">&times;</button>
+      </div>
+      <form id="form-batch-request">
+        <div class="modal-body">
+          <div class="grid-two">
+            <label>Competência Alvo
+              <input type="text" id="modal-batch-competence" value="2026-10" required>
+            </label>
+            <label>Filtrar por Regime Tributário
+              <select id="modal-batch-regime">
+                <option value="">Todas as Empresas Ativas</option>
+                <option value="simples_nacional">Apenas Simples Nacional</option>
+                <option value="lucro_presumido">Apenas Lucro Presumido</option>
+                <option value="lucro_real">Apenas Lucro Real</option>
+              </select>
+            </label>
+          </div>
+          <label>Tipos de Documentos Solicitados (separados por vírgula)
+            <input type="text" id="modal-batch-doctypes" value="Extrato OFX, XMLs NF-e/NFS-e, Folha de Pagamento" required>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-batch-request">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Disparar Cobrança em Lote</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: ANEXAR RECIBO OFICIAL DE TAREFA -->
+  <div id="modal-attach-receipt" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Anexar Comprovante Oficial de Transmissão</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-attach-receipt">&times;</button>
+      </div>
+      <form id="form-attach-receipt">
+        <div class="modal-body">
+          <input type="hidden" id="modal-attach-task-id">
+          <label>Obrigação Selecionada
+            <input type="text" id="modal-attach-task-title" readonly>
+          </label>
+          <label>Selecionar Documento em Custódia no GED (opcional)
+            <select id="modal-attach-doc-select">
+              <option value="">-- Informar ID e Hash manualmente ou escolher do GED --</option>
+            </select>
+          </label>
+          <label>Identificador do Arquivo (file_id)
+            <input type="text" id="modal-attach-file-id" placeholder="ID do documento no GED" required>
+          </label>
+          <label>Hash Criptográfico SHA-256 (64 caracteres hex)
+            <input type="text" class="mono" id="modal-attach-hash" minlength="64" maxlength="64" required>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-attach-receipt">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Vincular Recibo Auditado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: UPLOAD DE DOCUMENTO NO GED -->
+  <div id="modal-upload-doc" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Ingestão Auditada de Documento (GED SHA-256)</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-upload-doc">&times;</button>
+      </div>
+      <form id="form-upload-doc">
+        <div class="modal-body">
+          <label>Departamento Destino
+            <select id="modal-upload-dept">
+              <option value="fiscal">Fiscal (XML, SPED, Guias)</option>
+              <option value="contabil">Contábil (Balancetes, Razão)</option>
+              <option value="dp">Departamento Pessoal (Folha, eSocial)</option>
+              <option value="financeiro">Financeiro (Extratos, Boletos)</option>
+              <option value="societario">Societário (Contratos, Certidões)</option>
+            </select>
+          </label>
+          <label>Arquivo Digital (.pdf, .xml, .ofx, .csv, .xlsx, .zip, .png, .jpg)
+            <input type="file" id="modal-upload-file" required>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-upload-doc">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Validar Assinatura Binária e Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 5: NOVO TÍTULO FINANCEIRO -->
+  <div id="modal-create-payable" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Registrar Novo Título Financeiro (BPO)</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-create-payable">&times;</button>
+      </div>
+      <form id="form-create-payable">
+        <div class="modal-body">
+          <div class="grid-two">
+            <label>Natureza do Título
+              <select id="modal-pay-type">
+                <option value="payable">Conta a Pagar (Fornecedor / Imposto)</option>
+                <option value="receivable">Conta a Receber (Cliente)</option>
+              </select>
+            </label>
+            <label>Categoria DRE
+              <select id="modal-pay-category">
+                <option value="operating_expense">Despesa Operacional / Geral</option>
+                <option value="cogs">Custo de Mercadoria / Serviço (CMV/CSP)</option>
+                <option value="sales_deductions">Deduções e Impostos s/ Vendas</option>
+                <option value="financial_expense">Despesa Financeira / Tarifas</option>
+                <option value="financial_revenue">Receita Financeira</option>
+              </select>
+            </label>
+          </div>
+          <label>Favorecido / Contraparte
+            <input type="text" id="modal-pay-counterparty" placeholder="Ex.: Energia Elétrica S.A." required>
+          </label>
+          <div class="grid-two">
+            <label>Valor do Título (R$)
+              <input type="number" step="0.01" min="0.01" id="modal-pay-amount" placeholder="1250.00" required>
+            </label>
+            <label>Data de Vencimento
+              <input type="date" id="modal-pay-duedate" value="2026-10-25" required>
+            </label>
+          </div>
+          <label>Meio de Liquidação
+            <select id="modal-pay-method">
+              <option value="boleto">Boleto Bancário FEBRABAN</option>
+              <option value="pix">Transferência Instantânea PIX</option>
+              <option value="ted">TED / Transferência Bancária</option>
+              <option value="darf">Guia DARF / Arrecadação</option>
+            </select>
+          </label>
+          <label>Linha Digitável do Boleto (opcional, 44 a 48 dígitos)
+            <input type="text" class="mono" id="modal-pay-barcode" placeholder="34191790010104351004791020150008291070026000">
+          </label>
+          <label>Chave PIX (opcional)
+            <input type="text" id="modal-pay-pix" placeholder="CNPJ, E-mail, Telefone ou Chave Aleatória">
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-create-payable">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Registrar na Fila BPO</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 6: NOVO CHAMADO NO PORTAL DO CLIENTE -->
+  <div id="modal-new-ticket" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Abrir Solicitação Estruturada com SLA</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-new-ticket">&times;</button>
+      </div>
+      <form id="form-new-ticket">
+        <div class="modal-body">
+          <div class="grid-two">
+            <label>Categoria de Atendimento
+              <select id="modal-ticket-category">
+                <option value="duvida_fiscal">Dúvida Fiscal / Alíquota</option>
+                <option value="admissao_funcionario">Admissão de Funcionário (DP)</option>
+                <option value="recalculo_guia">Recálculo de Guia (DAS / DARF)</option>
+                <option value="emissao_nf">Suporte à Emissão de NF-e / NFS-e</option>
+                <option value="outros">Outros Assuntos Contábeis</option>
+              </select>
+            </label>
+            <label>Prioridade SLA
+              <select id="modal-ticket-priority">
+                <option value="normal">Normal (SLA 24h)</option>
+                <option value="high">Alta (SLA 8h)</option>
+                <option value="urgent">Urgente (SLA 2h)</option>
+              </select>
+            </label>
+          </div>
+          <label>Título Resumido da Solicitação
+            <input type="text" id="modal-ticket-title" placeholder="Ex.: Revisão de retenção de INSS na NFS-e 45" required>
+          </label>
+          <label>Descrição Detalhada e Dados Estruturados
+            <textarea class="form-textarea" id="modal-ticket-desc" placeholder="Informe os detalhes operacionais..." required></textarea>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-new-ticket">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Abrir Chamado com SLA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 7: CONFIGURAR MFA TOTP -->
+  <div id="modal-mfa-setup" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Configurar Autenticação Multifator (MFA TOTP — RFC 6238)</h3>
+        <button type="button" class="modal-close" data-close-modal="modal-mfa-setup">&times;</button>
+      </div>
+      <form id="form-mfa-verify">
+        <div class="modal-body">
+          <p style="font-size:0.86rem; color:var(--muted); margin-top:0;">
+            Adicione a chave secreta abaixo no seu aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou Authy) e informe o código de 6 dígitos gerado:
+          </p>
+          <div class="code-block" id="mfa-secret-code" style="text-align:center; font-size:1.05rem; font-weight:700; letter-spacing:0.12em; margin-bottom:10px;">
+            GERANDO SEGREDO...
+          </div>
+          <label>URI Provisionamento (otpauth://)
+            <input type="text" class="mono" id="mfa-otp-url" readonly>
+          </label>
+          <label>Código TOTP Atual (6 dígitos)
+            <input type="text" class="mono" id="modal-mfa-token" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="modal-mfa-setup">Fechar</button>
+          <button type="submit" class="btn btn-primary">Verificar e Ativar MFA</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 8: ESPELHO DANFSE & AUDITORIA DA NFS-E -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-header">
+        <h3 class="modal-title">Inspeção Detalhada da NFS-e — Espelho DANFSE &amp; Auditoria</h3>
+        <button type="button" class="modal-close" id="btnCloseModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-tabs">
+          <button type="button" class="tab-btn active" data-tab="danfse">Espelho DANFSE</button>
+          <button type="button" class="tab-btn" data-tab="complementares">PIX, Dados Bancários &amp; Deduções</button>
+          <button type="button" class="tab-btn" data-tab="auditoria">Auditoria Contábil &amp; XMLDSig</button>
+          <button type="button" class="tab-btn" data-tab="json">Estrutura JSON Completa</button>
+        </div>
+        <div id="tab-danfse" class="modal-tab-content active">
+          <div id="danfseContainer"></div>
+        </div>
+        <div id="tab-complementares" class="modal-tab-content"></div>
+        <div id="tab-auditoria" class="modal-tab-content"></div>
+        <div id="tab-json" class="modal-tab-content">
+          <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" data-action="copyJsonToClipboard">Copiar JSON</button>
+          </div>
+          <pre class="code-block" id="jsonViewer"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTAINER GLOBAL DE TOASTS -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- SCRIPTS UNIFICADOS DO PORTAL SUPREME -->
+  <script src="/assets/retencoes.js"></script>
+  <script src="/assets/charts.js"></script>
+  <script src="/assets/api.js"></script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

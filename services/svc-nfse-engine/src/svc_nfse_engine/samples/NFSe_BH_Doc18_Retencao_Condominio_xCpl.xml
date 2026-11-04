@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS31062002410300000000000000000000000000000000000018">
+    <xLocEmi>Belo Horizonte</xLocEmi>
+    <xLocPrestacao>Belo Horizonte</xLocPrestacao>
+    <nNFSe>3018</nNFSe>
+    <cLocIncid>3106200</cLocIncid>
+    <xLocIncid>Belo Horizonte</xLocIncid>
+    <xTribNac>Vigilancia, seguranca ou monitoramento de bens e pessoas</xTribNac>
+    <xNBS>Servicos de seguranca armada e desarmada</xNBS>
+    <verAplic>EmissorWeb_1.5.0.0</verAplic>
+    <ambGer>1</ambGer>
+    <tpEmis>1</tpEmis>
+    <procEmi>2</procEmi>
+    <cStat>100</cStat>
+    <dhProc>2026-03-05T16:44:20-03:00</dhProc>
+    <nDFSe>793102</nDFSe>
+    <emit>
+      <CNPJ>34567890000177</CNPJ>
+      <xNome>FORTALEZA SEGURANCA E VIGILANCIA PATRIMONIAL LTDA</xNome>
+      <enderNac>
+        <xLgr>Rua da Bahia</xLgr>
+        <nro>1200</nro>
+        <xBairro>Lourdes</xBairro>
+        <cMun>3106200</cMun>
+        <UF>MG</UF>
+        <CEP>30160011</CEP>
+      </enderNac>
+      <fone>3132221100</fone>
+      <email>financeiro@fortalezaseg.com.br</email>
+    </emit>
+    <valores>
+      <vBC>5426.60</vBC>
+      <pAliqAplic>5.00</pAliqAplic>
+      <vISSQN>271.33</vISSQN>
+      <vTotalRet>746.16</vTotalRet>
+      <vLiq>4680.44</vLiq>
+    </valores>
+    <DPS versao="1.01">
+      <infDPS Id="DPS31062002410300000000000000000000000000000000000018">
+        <tpAmb>1</tpAmb>
+        <dhEmi>2026-03-05T16:00:00-03:00</dhEmi>
+        <verAplic>EmissorWeb_1.4.0.26</verAplic>
+        <serie>900</serie>
+        <nDPS>3018</nDPS>
+        <dCompet>2026-03-05</dCompet>
+        <tpEmit>1</tpEmit>
+        <cLocEmi>3106200</cLocEmi>
+        <prest>
+          <CNPJ>34567890000177</CNPJ>
+          <regTrib>
+            <opSimpNac>1</opSimpNac>
+            <regEspTrib>0</regEspTrib>
+          </regTrib>
+        </prest>
+        <toma>
+          <CNPJ>56789012000166</CNPJ>
+          <xNome>CONDOMINIO DO EDIFICIO METROPOLIS TOWER</xNome>
+          <end>
+            <endNac>
+              <cMun>3106200</cMun>
+              <CEP>30130000</CEP>
+            </endNac>
+            <xLgr>Avenida Afonso Pena</xLgr>
+            <nro>4000</nro>
+            <xCpl>Bloco B - Cobertura</xCpl>
+            <xBairro>Cruzeiro</xBairro>
+          </end>
+        </toma>
+        <serv>
+          <locPrest>
+            <cLocPrestacao>3106200</cLocPrestacao>
+          </locPrest>
+          <cServ>
+            <cTribNac>110201</cTribNac>
+            <xDescServ>SERVICOS DE VIGILANCIA DESARMADA E PORTARIA 24H CONFORME ESCALA MENSAL.</xDescServ>
+            <cNBS>118021100</cNBS>
+          </cServ>
+          <infoCompl>
+            <xInfComp>RETENCOES: ISS RETIDO R$ 271,33 + INSS RETIDO R$ 474,83 = TOTAL RETENCOES R$ 746,16. BANCO BRADESCO, AGENCIA: 0456, CONTA: 89012-3. CHAVE PIX: financeiro@fortalezaseg.com.br. CONTRATO: CT-441-2024.</xInfComp>
+          </infoCompl>
+        </serv>
+        <valores>
+          <vServPrest>
+            <vServ>5426.60</vServ>
+          </vServPrest>
+          <trib>
+            <tribMun>
+              <tribISSQN>1</tribISSQN>
+              <tpRetISSQN>2</tpRetISSQN>
+            </tribMun>
+            <tribFed>
+              <piscofins>
+                <CST>01</CST>
+                <vBCPisCofins>5426.60</vBCPisCofins>
+                <pAliqPis>0.65</pAliqPis>
+                <pAliqCofins>3.00</pAliqCofins>
+                <vPis>35.27</vPis>
+                <vCofins>162.80</vCofins>
+                <tpRetPisCofins>0</tpRetPisCofins>
+              </piscofins>
+              <vRetCP>474.83</vRetCP>
+            </tribFed>
+            <totTrib>
+              <pTotTrib>
+                <pTotTribFed>12.80</pTotTribFed>
+                <pTotTribEst>0.00</pTotTribEst>
+                <pTotTribMun>5.00</pTotTribMun>
+              </pTotTrib>
+            </totTrib>
+          </trib>
+        </valores>
+      </infDPS>
+    </DPS>
+  </infNFSe>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <Reference URI="#NFS31062002410300000000000000000000000000000000000018">
+        <DigestValue>ZGlnZXN0LWRvYy0xOC12aWdpbGFuY2lh</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>U2lnbmF0dXJlVmFsdWVEb2MxOFZpZ2lsYW5jaWFBc3NpbmFkbw==</SignatureValue>
+  </Signature>
+</NFSe>

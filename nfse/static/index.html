@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFS-e Nacional Intelligence | Extração, JSON, Auditoria & Planilhas</title>
+  <meta name="description" content="Plataforma de inteligência fiscal para extração de XMLs NFS-e Nacional SPED, armazenamento estruturado em JSON, conciliação e exportação em planilhas." />
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js para visualização de dados -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Estilos Personalizados -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div class="brand-logo">NF</div>
+      <div class="brand-info">
+        <h1>NFS-e Nacional Intelligence <span class="badge-tag">Sped v1.01</span></h1>
+        <p>Parser analítico, persistência em JSON, conciliação fiscal e exportação Excel</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="btnLoadSamples" class="btn btn-secondary" title="Carregar amostras dos documentos 1, 16, 18 e 20">
+        <span>⚡</span> Carregar Amostras Oficiais
+      </button>
+
+      <button id="btnExportExcel" class="btn btn-primary" title="Download da planilha com 4 abas analíticas">
+        <span>📊</span> Exportar Excel (.xlsx)
+      </button>
+
+      <button id="btnExportCsv" class="btn btn-secondary" title="Download em CSV formatado PT-BR">
+        <span>📄</span> Exportar CSV
+      </button>
+
+      <button id="btnExportJson" class="btn btn-accent" title="Download do arquivo consolidado em JSON">
+        <span>{ }</span> Exportar JSON
+      </button>
+
+      <button id="btnClearDb" class="btn btn-danger-outline" title="Limpar todas as notas">
+        <span>🗑️</span>
+      </button>
+
+      <button id="themeToggleBtn" class="btn-icon" title="Alternar tema">
+        🌙
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Upload Hero Zone -->
+    <section class="upload-hero" id="uploadHero">
+      <input type="file" id="fileInput" multiple accept=".xml,.zip" style="display: none;" />
+      <div class="upload-hero-content">
+        <div class="upload-icon-wrapper">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <h2>Arraste e solte arquivos XML ou ZIP de NFS-e aqui</h2>
+        <p>Suporta processamento em lote de dezenas ou centenas de notas simultâneas. O sistema extrai automaticamente todos os tributos, dados do tomador/prestador e salva em arquivos .json individuais.</p>
+        <div class="upload-badge-row">
+          <span class="mini-badge">✓ Padrão Nacional RFB/SPED v1.01</span>
+          <span class="mini-badge">✓ Extração Automática de PIX & Bancos</span>
+          <span class="mini-badge">✓ Auditoria Contábil Automática</span>
+          <span class="mini-badge">✓ Retenções ISS, INSS, PIS & COFINS</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI Cards Grid -->
+    <section class="kpi-grid">
+      <!-- Faturamento Bruto -->
+      <div class="kpi-card emerald">
+        <div class="kpi-header">
+          <span class="kpi-title">Faturamento Bruto</span>
+          <div class="kpi-icon">💰</div>
+        </div>
+        <div class="kpi-value" id="kpiBruto">R$ 0,00</div>
+        <div class="kpi-subtitle">Total declarado dos serviços (vServ)</div>
+      </div>
+
+      <!-- Faturamento Líquido -->
+      <div class="kpi-card cyan">
+        <div class="kpi-header">
+          <span class="kpi-title">Faturamento Líquido</span>
+          <div class="kpi-icon">📥</div>
+        </div>
+        <div class="kpi-value" id="kpiLiquido">R$ 0,00</div>
+        <div class="kpi-subtitle">Efetivo de caixa pós retenções (vLiq)</div>
+      </div>
+
+      <!-- Total de Retenções -->
+      <div class="kpi-card amber">
+        <div class="kpi-header">
+          <span class="kpi-title">Retenções na Fonte</span>
+          <div class="kpi-icon">⚖️</div>
+        </div>
+        <div class="kpi-value" id="kpiRetencoes">R$ 0,00</div>
+        <div class="kpi-subtitle" id="kpiRetencoesPct">0.0% da receita</div>
+      </div>
+
+      <!-- ISS Próprio vs Retido -->
+      <div class="kpi-card blue">
+        <div class="kpi-header">
+          <span class="kpi-title">ISSQN Municipal</span>
+          <div class="kpi-icon">🏛️</div>
+        </div>
+        <div class="kpi-value" id="kpiIssProprio">R$ 0,00</div>
+        <div class="kpi-subtitle">Retido pelo tomador: <strong id="kpiIssRetido" style="color: #06b6d4; margin-left: 4px;">R$ 0,00</strong></div>
+      </div>
+
+      <!-- INSS Retido (Cessão Mão de Obra) -->
+      <div class="kpi-card indigo">
+        <div class="kpi-header">
+          <span class="kpi-title">INSS Previdenciário</span>
+          <div class="kpi-icon">🛡️</div>
+        </div>
+        <div class="kpi-value" id="kpiInss">R$ 0,00</div>
+        <div class="kpi-subtitle">Retenção de cessão de mão de obra (CP)</div>
+      </div>
+
+      <!-- PIS e COFINS -->
+      <div class="kpi-card rose">
+        <div class="kpi-header">
+          <span class="kpi-title">Tributos Federais</span>
+          <div class="kpi-icon">🇧🇷</div>
+        </div>
+        <div class="kpi-value" id="kpiPisCofins">R$ 0,00</div>
+        <div class="kpi-subtitle">PIS e COFINS apurados / retidos</div>
+      </div>
+
+      <!-- Auditoria e Conformidade -->
+      <div class="kpi-card emerald">
+        <div class="kpi-header">
+          <span class="kpi-title">Conformidade Fiscal</span>
+          <div class="kpi-icon">✅</div>
+        </div>
+        <div class="kpi-value" id="kpiConformidade">100.0%</div>
+        <div class="kpi-subtitle" id="kpiNotasCount">0 notas cadastradas</div>
+      </div>
+    </section>
+
+    <!-- Visual Analytics Charts Grid -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title"><span>📈</span> Indicadores Visuais & Análise de Tendência</h2>
+      </div>
+
+      <div class="charts-grid">
+        <!-- Evolução Temporal -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Evolução do Faturamento e Retenções (por Competência)</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartTimeline"></canvas>
+          </div>
+        </div>
+
+        <!-- Composição de Retenções -->
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Composição das Retenções na Fonte</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartRetencoes"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subgrid Analytics: Top Tomadores & Municípios -->
+      <div class="analytics-subgrid" style="margin-top: 1.5rem;">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Top Tomadores por Volume de Serviço (R$)</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartTomadores"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">Faturamento por Município de Prestação</span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="chartMunicipios"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Módulo de Retenções por Competência -->
+    <section id="retencoesModule" class="retencoes-module" aria-labelledby="retencoesTitle">
+      <div class="section-header">
+        <div>
+          <h2 id="retencoesTitle" class="section-title"><span aria-hidden="true">⚖️</span> Retenções por Competência</h2>
+          <p class="retencoes-description">Consulte os tributos retidos e os valores declarados em cada nota.</p>
+        </div>
+        <div class="retencoes-controls">
+          <div class="retencoes-field">
+            <label for="retencoesCompetencia">Competência</label>
+            <select id="retencoesCompetencia" class="custom-select" aria-describedby="retencoesHelp">
+              <option value="">Todas as competências</option>
+            </select>
+          </div>
+          <button id="btnClearRetencoesFilter" type="button" class="btn btn-secondary" disabled>Limpar filtro</button>
+        </div>
+      </div>
+      <p id="retencoesHelp" class="retencoes-description">O filtro considera o mês e o ano da competência da nota e se aplica a este módulo.</p>
+      <p id="retencoesStatus" class="retencoes-status" role="status">Carregando retenções...</p>
+      <button id="btnRetryRetencoes" type="button" class="btn btn-secondary" hidden>Tentar novamente</button>
+
+      <div id="retencoesResults" hidden>
+        <dl class="retencoes-summary">
+          <div class="kpi-card amber"><dt class="kpi-title">Total declarado</dt><dd id="retencoesTotalDeclarado" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card emerald"><dt class="kpi-title">Tributos identificados</dt><dd id="retencoesTotalIdentificado" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card blue"><dt class="kpi-title">ISS retido</dt><dd id="retencoesIss" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card indigo"><dt class="kpi-title">INSS retido</dt><dd id="retencoesInss" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card rose"><dt class="kpi-title">PIS retido</dt><dd id="retencoesPis" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card rose"><dt class="kpi-title">COFINS retida</dt><dd id="retencoesCofins" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card cyan"><dt class="kpi-title">IRRF retido</dt><dd id="retencoesIrrf" class="kpi-value">R$ 0,00</dd></div>
+          <div class="kpi-card cyan"><dt class="kpi-title">CSLL retida</dt><dd id="retencoesCsll" class="kpi-value">R$ 0,00</dd></div>
+        </dl>
+        <p id="retencoesDifference" class="retencoes-description"></p>
+        <div class="table-card">
+          <div class="table-responsive" role="region" aria-label="Notas com retenções; role horizontalmente para ver todos os tributos" tabindex="0">
+            <table class="data-table retencoes-table">
+              <caption id="retencoesCaption">Notas com retenções · valores em reais (R$)</caption>
+              <thead>
+                <tr>
+                  <th scope="col">NFS-e</th>
+                  <th scope="col">Competência</th>
+                  <th scope="col">Tomador</th>
+                  <th scope="col">ISS</th>
+                  <th scope="col">INSS</th>
+                  <th scope="col">PIS</th>
+                  <th scope="col">COFINS</th>
+                  <th scope="col">IRRF</th>
+                  <th scope="col">CSLL</th>
+                  <th scope="col">Total declarado</th>
+                  <th scope="col">Tributos identificados</th>
+                </tr>
+              </thead>
+              <tbody id="retencoesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabela de Notas Fiscais -->
+    <section>
+      <div class="section-header">
+        <h2 class="section-title"><span>📋</span> Repositório de Notas Fiscais Extraídas</h2>
+      </div>
+
+      <!-- Barra de Filtros -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="Buscar por chave, número, tomador, CNPJ, município ou serviço..." />
+        </div>
+
+        <div class="filters-group">
+          <select id="filterRetencao" class="custom-select">
+            <option value="">Todas as Retenções</option>
+            <option value="com_retencao">Com Retenção na Fonte</option>
+            <option value="sem_retencao">Sem Retenção</option>
+          </select>
+
+          <select id="filterStatus" class="custom-select">
+            <option value="">Todos os Status de Auditoria</option>
+            <option value="CONCILIADO">Conciliadas (100% OK)</option>
+            <option value="ALERTA">Alertas</option>
+            <option value="INCONSISTENTE">Inconsistentes</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Tabela -->
+      <div class="table-card" style="margin-top: 1rem;">
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>NFS-e / Chave</th>
+                <th>Competência / Data</th>
+                <th>Tomador (Cliente)</th>
+                <th>Local Prestação</th>
+                <th>Valor Bruto</th>
+                <th>Retenções</th>
+                <th>Valor Líquido</th>
+                <th>Auditoria</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="notesTableBody">
+              <!-- Preenchido dinamicamente via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          <h3>Nenhuma nota fiscal encontrada</h3>
+          <p>Arraste arquivos XML ou ZIP para a área de upload acima ou clique no botão abaixo para carregar as amostras oficiais para demonstração.</p>
+          <button class="btn btn-primary" onclick="loadSampleData()">
+            ⚡ Carregar Amostras Oficiais
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal com Espelho DANFSE e Detalhes Completos -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Detalhes da NFS-e</h3>
+        <button class="modal-close-btn" id="modalCloseBtn" title="Fechar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Abas do Modal -->
+      <div class="modal-tabs">
+        <button class="tab-btn active" data-tab="danfse">Espelho DANFSE</button>
+        <button class="tab-btn" data-tab="tributos">Tributação & Retenções</button>
+        <button class="tab-btn" data-tab="complementares">PIX & Complementares (Regex)</button>
+        <button class="tab-btn" data-tab="auditoria">Auditoria Contábil</button>
+        <button class="tab-btn" data-tab="json">JSON Estruturado</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="tab-content active" id="tab-danfse">
+          <!-- Injetado dinamicamente -->
+        </div>
+
+        <div class="tab-content" id="tab-tributos">
+          <!-- Injetado dinamicamente -->
+        </div>
+
+        <div class="tab-content" id="tab-complementares">
+          <!-- Injetado dinamicamente -->
+        </div>
+
+        <div class="tab-content" id="tab-auditoria">
+          <!-- Injetado dinamicamente -->
+        </div>
+
+        <div class="tab-content" id="tab-json">
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 0.5rem;">
+            <button class="btn btn-secondary" onclick="copyJsonToClipboard()">
+              📋 Copiar JSON
+            </button>
+          </div>
+          <pre class="json-code" id="jsonViewer"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Script Principal -->
+  <script src="/static/js/retencoes.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+"""Compatibility entry point: uvicorn main:app and python main.py."""
+from portalcontabilidades.app import app, create_app
+
+__all__ = ["app", "create_app"]
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS35503082410200000000000000000000000000000000000016">
+    <xLocEmi>Sao Paulo</xLocEmi>
+    <xLocPrestacao>Sao Paulo</xLocPrestacao>
+    <nNFSe>2016</nNFSe>
+    <cLocIncid>3550308</cLocIncid>
+    <xLocIncid>Sao Paulo</xLocIncid>
+    <xTribNac>Desenvolvimento de programas de computador sob encomenda</xTribNac>
+    <xNBS>Servicos de TI e programacao</xNBS>
+    <verAplic>EmissorWeb_1.5.0.0</verAplic>
+    <ambGer>1</ambGer>
+    <tpEmis>1</tpEmis>
+    <procEmi>2</procEmi>
+    <cStat>100</cStat>
+    <dhProc>2026-02-10T09:12:33-03:00</dhProc>
+    <nDFSe>612340</nDFSe>
+    <emit>
+      <CNPJ>23456789000188</CNPJ>
+      <xNome>CODEX TECH INOVACOES DIGITAIS LTDA</xNome>
+      <enderNac>
+        <xLgr>Avenida Paulista</xLgr>
+        <nro>1500</nro>
+        <xBairro>Bela Vista</xBairro>
+        <cMun>3550308</cMun>
+        <UF>SP</UF>
+        <CEP>01310100</CEP>
+      </enderNac>
+      <fone>1130034000</fone>
+      <email>contato@codextech.io</email>
+    </emit>
+    <valores>
+      <vBC>12500.00</vBC>
+      <pAliqAplic>2.79</pAliqAplic>
+      <vISSQN>348.75</vISSQN>
+      <vLiq>12500.00</vLiq>
+    </valores>
+    <DPS versao="1.01">
+      <infDPS Id="DPS35503082410200000000000000000000000000000000000016">
+        <tpAmb>1</tpAmb>
+        <dhEmi>2026-02-10T08:50:00-03:00</dhEmi>
+        <verAplic>EmissorWeb_1.4.0.26</verAplic>
+        <serie>70000</serie>
+        <nDPS>2016</nDPS>
+        <dCompet>2026-02-10</dCompet>
+        <tpEmit>1</tpEmit>
+        <cLocEmi>3550308</cLocEmi>
+        <prest>
+          <CNPJ>23456789000188</CNPJ>
+          <regTrib>
+            <opSimpNac>2</opSimpNac>
+            <regEspTrib>0</regEspTrib>
+          </regTrib>
+        </prest>
+        <toma>
+          <CNPJ>45678901000122</CNPJ>
+          <xNome>FINTECH HORIZONTE SERVICOS FINANCEIROS LTDA</xNome>
+          <end>
+            <endNac>
+              <cMun>3550308</cMun>
+              <CEP>04543011</CEP>
+            </endNac>
+            <xLgr>Avenida Brigadeiro Faria Lima</xLgr>
+            <nro>3477</nro>
+            <xBairro>Itaim Bibi</xBairro>
+          </end>
+        </toma>
+        <serv>
+          <locPrest>
+            <cLocPrestacao>3550308</cLocPrestacao>
+          </locPrest>
+          <cServ>
+            <cTribNac>010101</cTribNac>
+            <xDescServ>DESENVOLVIMENTO DE APIs E ARQUITETURA DE MICROSSERVICOS CONFORME SPRINT 14.</xDescServ>
+            <cNBS>115011100</cNBS>
+          </cServ>
+          <infoCompl>
+            <xInfComp>DOCUMENTO EMITIDO POR ME OU EPP OPTANTE PELO SIMPLES NACIONAL. NAO GERA DIREITO A CREDITO FISCAL DE IPI. BANCO NUBANK, CHAVE PIX: contato@codextech.io. PO: 440912.</xInfComp>
+          </infoCompl>
+        </serv>
+        <valores>
+          <vServPrest>
+            <vServ>12500.00</vServ>
+          </vServPrest>
+          <trib>
+            <tribMun>
+              <tribISSQN>1</tribISSQN>
+              <tpRetISSQN>1</tpRetISSQN>
+            </tribMun>
+            <tribFed>
+              <piscofins>
+                <CST>07</CST>
+                <vBCPisCofins>0.00</vBCPisCofins>
+                <pAliqPis>0.00</pAliqPis>
+                <pAliqCofins>0.00</pAliqCofins>
+                <vPis>0.00</vPis>
+                <vCofins>0.00</vCofins>
+                <tpRetPisCofins>0</tpRetPisCofins>
+              </piscofins>
+            </tribFed>
+            <totTrib>
+              <pTotTrib>
+                <pTotTribFed>4.25</pTotTribFed>
+                <pTotTribEst>0.00</pTotTribEst>
+                <pTotTribMun>2.79</pTotTribMun>
+              </pTotTrib>
+            </totTrib>
+          </trib>
+        </valores>
+      </infDPS>
+    </DPS>
+  </infNFSe>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <Reference URI="#NFS35503082410200000000000000000000000000000000000016">
+        <DigestValue>ZGlnZXN0LWRvYy0xNi1zb2Z0d2FyZQ==</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>U2lnbmF0dXJlVmFsdWVEb2MxNlNpbXBsZXNOYWNpb25hbA==</SignatureValue>
+  </Signature>
+</NFSe>

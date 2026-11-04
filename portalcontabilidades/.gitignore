@@ -1,0 +1,29 @@
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# User rules: Nunca dar push em arquivos .txt e .pdf
+*.txt
+*.pdf
+
+# Databases & local files
+*.db
+*.sqlite
+*.sqlite3
+.env
+storage/uploads/
+
+# Packaging artifacts
+build/
+dist/
+*.egg-info/
+

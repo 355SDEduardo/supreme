@@ -1,0 +1,87 @@
+<section id="auditoria-nfse" class="panel" role="tabpanel" data-tab-panel hidden>
+  <div class="section-heading">
+    <div><p class="eyebrow">Serviços municipais e padrão nacional</p>
+      <h2>Leitura e auditoria de NFS-e</h2>
+      <p>Envie XMLs ou ZIPs para conferir ISS, retenções federais e IBS/CBS. Os alertas fiscais indicam pontos para conferência documental.</p>
+    </div>
+  </div>
+  <form id="form-upload-nfse" class="stack-form async-form" action="{{ url_for('process_nfse') }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div id="drop-zone-nfse" class="field nfse-drop-zone">
+      <label for="arquivos_nfse">XMLs ou ZIPs de NFS-e</label>
+      <input type="file" id="arquivos_nfse" name="arquivos_nfse" accept=".xml,.zip" multiple required aria-describedby="nfse-upload-help">
+      <small id="nfse-upload-help">Selecione ou arraste arquivos aqui. Até 200 uploads e 55 MB por envio; 10 MB por XML; 5.000 XMLs e 100 MB descompactados por lote. Padrões nacional, ABRASF e Paulistana; leiautes locais recebem indicação de extração heurística.</small>
+      <span id="nfse-file-count" role="status" aria-live="polite"></span>
+    </div>
+    <button class="button button-primary" type="submit" data-pending-label="Auditando notas fiscais…">Processar e auditar lote</button>
+  </form>
+  {% if nfse_state %}
+  <div class="toolbar">
+    <a class="button button-secondary" href="{{ url_for('export_nfse_excel') }}">Baixar Excel</a>
+    <a class="button button-secondary" href="{{ url_for('export_nfse_csv', dataset='notas') }}">CSV de notas</a>
+    <a class="button button-secondary" href="{{ url_for('export_nfse_csv', dataset='apontamentos') }}">CSV de apontamentos</a>
+    <a class="button button-secondary" href="{{ url_for('export_nfse_json') }}">Baixar JSON</a>
+    <form action="{{ url_for('clear_nfse') }}" method="post" data-confirm="Remover os dados de NFS-e desta sessão?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="button button-secondary" type="submit">Limpar NFS-e</button>
+    </form>
+  </div>
+  <p>{{ nfse_state.total_processed }} XML(s) inspecionados; {{ nfse_state.total_valid }} documento(s) normalizados; {{ nfse_state.events|length }} evento(s).</p>
+  <div class="nfse-kpis">
+    {% for label, value in [('Bruto vigente', nfse_state.total_gross_amount), ('ISS apurado', nfse_state.total_iss_amount), ('ISS retido', nfse_state.total_iss_withheld), ('Retenções federais', nfse_state.total_federal_withheld), ('Líquido auditado', nfse_state.total_net_amount)] %}
+      <div class="nfse-kpi"><span>{{ label }}</span><strong>{{ value|brl }}</strong></div>
+    {% endfor %}
+  </div>
+  <p>Totais financeiros incluem somente NFS-e autorizadas vigentes. DPS avulsas, canceladas e substituídas permanecem nas tabelas.</p>
+  <p>{{ nfse_state.total_with_findings }} documento(s) com apontamentos.
+    {% for severity in ['CRITICAL', 'HIGH', 'WARNING', 'INFO'] %}<span class="badge nfse-{{ severity|lower }}">{{ severity }}: {{ nfse_severity.get(severity, 0) }}</span> {% endfor %}
+  </p>
+  {% if nfse_state.documents %}
+  <h3>Notas auditadas</h3>
+  <p>As retenções federais são detalhadas por nota. Quando o XML informa somente o total consolidado de CSLL, PIS e COFINS, os valores individuais aparecem como “—”.</p>
+  <div class="field"><label for="nfse-search">Buscar número, prestador ou tomador</label>
+    <input type="search" id="nfse-search" data-reconciliation-filter="nfse-notes">
+    <span id="nfse-notes-count" role="status">{{ nfse_state.documents|length }} documento(s)</span>
+  </div>
+  <div class="table-wrap" tabindex="0" aria-label="Notas auditadas, tabela com rolagem">
+    <table id="nfse-notes" class="sortable-table" data-table-name="Notas de serviço">
+      <thead><tr>{% for title in ['Número', 'Tipo', 'Prestador', 'Tomador', 'Competência', 'Status', 'Bruto', 'ISS', 'IRRF retido', 'INSS/CP retido', 'CSLL retida', 'PIS retido', 'COFINS retida', 'Outras retenções', 'CSLL/PIS/COFINS consolidado', 'Total federal retido', 'Líquido declarado', 'Líquido auditado', 'Apontamentos'] %}<th scope="col" {% if loop.index >= 7 %}class="number"{% endif %}>{{ title }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for doc in nfse_state.documents %}<tr>
+        {% set federal = doc.federal_withholding %}
+        {% set social_total = federal.social_contributions_total if federal.social_contributions_total is not none else federal.csll + federal.pis + federal.cofins %}
+        <td>{{ doc.identity.nfse_number or doc.identity.dps_number or '—' }}</td><td>{{ doc.kind.value }} / {{ doc.family.value }}</td>
+        <td>{{ doc.provider.name }}<br>{{ doc.provider.tax_id }}</td>
+        <td>{{ doc.customer.name if doc.customer else 'Não identificado' }}<br>{{ doc.customer.tax_id if doc.customer else '' }}</td>
+        <td>{{ doc.identity.competence_date or '—' }}</td><td>{{ doc.status.value }}</td>
+        <td class="number">{{ doc.amounts.gross_service|brl }}</td><td class="number">{{ doc.amounts.iss_amount|brl }}</td>
+        <td class="number">{{ federal.irrf|brl }}</td><td class="number">{{ federal.inss_cp|brl }}</td>
+        <td class="number">{{ federal.csll|brl if federal.social_contributions_total is none else '—' }}</td>
+        <td class="number">{{ federal.pis|brl if federal.social_contributions_total is none else '—' }}</td>
+        <td class="number">{{ federal.cofins|brl if federal.social_contributions_total is none else '—' }}</td>
+        <td class="number">{{ federal.other_withholdings|brl }}</td>
+        <td class="number">{{ federal.social_contributions_total|brl if federal.social_contributions_total is not none else '—' }}</td>
+        <td class="number">{{ (federal.irrf + federal.inss_cp + federal.other_withholdings + social_total)|brl }}</td>
+        <td class="number">{{ doc.amounts.net_amount_declared|brl }}</td><td class="number">{{ doc.amounts.net_amount_calculated|brl }}</td><td class="number">{{ doc.findings|length }}</td>
+      </tr>{% endfor %}<tr data-table-empty hidden><td colspan="19">Nenhuma nota corresponde à busca.</td></tr></tbody>
+    </table>
+  </div>
+  <h3>Apontamentos fiscais</h3>
+  <div class="table-wrap" tabindex="0" aria-label="Apontamentos fiscais, tabela com rolagem"><table>
+    <thead><tr>{% for title in ['Nota', 'Severidade', 'Regra', 'Descrição', 'Reportado', 'Esperado', 'Base legal'] %}<th scope="col">{{ title }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for doc in nfse_state.documents %}{% for finding in doc.findings %}<tr>
+      <td>{{ doc.identity.nfse_number or doc.identity.dps_number }}</td><td><span class="badge nfse-{{ finding.severity.value|lower }}">{{ finding.severity.value }}</span></td>
+      <td>{{ finding.code }}</td><td>{{ finding.title }} — {{ finding.description }}</td><td>{{ finding.reported }}</td><td>{{ finding.expected }}</td><td>{{ finding.legal_basis }}</td>
+    </tr>{% endfor %}{% endfor %}</tbody>
+  </table></div>
+  {% if not nfse_severity %}<p>Nenhum apontamento nas regras verificadas.</p>{% endif %}
+  {% endif %}
+  {% if nfse_state.events %}
+  <h3>Eventos fiscais</h3>
+  <div class="table-wrap" tabindex="0" aria-label="Eventos fiscais"><table>
+    <thead><tr><th scope="col">Chave alvo</th><th scope="col">Tipo</th><th scope="col">Data de registro</th><th scope="col">Motivo</th><th scope="col">Situação</th></tr></thead>
+    <tbody>{% for event in nfse_state.events %}<tr><td>{{ event.target_access_key or event.target_number }}</td><td>{{ event.event_type }}</td><td>{{ event.event_datetime }}</td><td>{{ event.reason }}</td><td>{{ 'Sem documento no lote' if event in nfse_state.orphan_events else 'Associado' }}{{ ' / Pedido sem confirmação' if not event.confirmed else '' }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% endif %}
+  {% if nfse_state.issues %}<h3>Ocorrências de leitura</h3><ul>{% for issue in nfse_state.issues %}<li>{{ issue.filename }}: {{ issue.message }}</li>{% endfor %}</ul>{% endif %}
+  {% else %}<p>Envie um lote para visualizar notas, eventos, totais e apontamentos.</p>{% endif %}
+</section>

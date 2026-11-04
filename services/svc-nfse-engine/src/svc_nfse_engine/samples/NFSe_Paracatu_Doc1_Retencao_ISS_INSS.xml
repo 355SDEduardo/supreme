@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS31470062410100000000000000000000000000000000000001">
+    <xLocEmi>Paracatu</xLocEmi>
+    <xLocPrestacao>Paracatu</xLocPrestacao>
+    <nNFSe>1001</nNFSe>
+    <cLocIncid>3147006</cLocIncid>
+    <xLocIncid>Paracatu</xLocIncid>
+    <xTribNac>Cessao de mao-de-obra e servicos terceirizados</xTribNac>
+    <xNBS>Servicos de apoio a gestao de edificios</xNBS>
+    <verAplic>EmissorWeb_1.5.0.0</verAplic>
+    <ambGer>1</ambGer>
+    <tpEmis>1</tpEmis>
+    <procEmi>2</procEmi>
+    <cStat>100</cStat>
+    <dhProc>2026-01-15T14:28:10-03:00</dhProc>
+    <nDFSe>584920</nDFSe>
+    <emit>
+      <CNPJ>12345678000199</CNPJ>
+      <xNome>CONSERVA SERVICOS E FACILIDADES LTDA</xNome>
+      <enderNac>
+        <xLgr>Avenida Central</xLgr>
+        <nro>500</nro>
+        <xBairro>Centro</xBairro>
+        <cMun>3147006</cMun>
+        <UF>MG</UF>
+        <CEP>38600000</CEP>
+      </enderNac>
+      <fone>3836719000</fone>
+      <email>fiscal@conserva.com.br</email>
+    </emit>
+    <valores>
+      <vBC>8774.20</vBC>
+      <pAliqAplic>5.00</pAliqAplic>
+      <vISSQN>438.71</vISSQN>
+      <vTotalRet>1161.05</vTotalRet>
+      <vLiq>7613.15</vLiq>
+    </valores>
+    <DPS versao="1.01">
+      <infDPS Id="DPS31470062410100000000000000000000000000000000000001">
+        <tpAmb>1</tpAmb>
+        <dhEmi>2026-01-15T14:15:00-03:00</dhEmi>
+        <verAplic>EmissorWeb_1.4.0.26</verAplic>
+        <serie>900</serie>
+        <nDPS>1001</nDPS>
+        <dCompet>2026-01-15</dCompet>
+        <tpEmit>1</tpEmit>
+        <cLocEmi>3147006</cLocEmi>
+        <prest>
+          <CNPJ>12345678000199</CNPJ>
+          <regTrib>
+            <opSimpNac>1</opSimpNac>
+            <regEspTrib>0</regEspTrib>
+          </regTrib>
+        </prest>
+        <toma>
+          <CNPJ>98765432000110</CNPJ>
+          <xNome>MINERACAO OURO VERDE S.A.</xNome>
+          <end>
+            <endNac>
+              <cMun>3147006</cMun>
+              <CEP>38600100</CEP>
+            </endNac>
+            <xLgr>Rodovia MG 188</xLgr>
+            <nro>KM 15</nro>
+            <xBairro>Zona Rural</xBairro>
+          </end>
+        </toma>
+        <serv>
+          <locPrest>
+            <cLocPrestacao>3147006</cLocPrestacao>
+          </locPrest>
+          <cServ>
+            <cTribNac>170501</cTribNac>
+            <xDescServ>PRESTACAO DE SERVICOS DE APOIO OPERACIONAL E CONSERVACAO PREDIAL CONFORME MEDICAO 01/2026.</xDescServ>
+            <cNBS>118012200</cNBS>
+          </cServ>
+          <infoCompl>
+            <xInfComp>CONTRATO: CTR-2025/089. MEDICAO: 01/2026. DADOS BANCARIOS: BANCO ITAU, AG: 1234, C/C: 56789-0. CHAVE PIX: 12345678000199. DEDUCOES: VT: R$ 450,00 | VR: R$ 680,00 CONFORME ART 121 IN RFB 971.</xInfComp>
+          </infoCompl>
+        </serv>
+        <valores>
+          <vServPrest>
+            <vServ>8774.20</vServ>
+          </vServPrest>
+          <trib>
+            <tribMun>
+              <tribISSQN>1</tribISSQN>
+              <tpRetISSQN>2</tpRetISSQN>
+            </tribMun>
+            <tribFed>
+              <piscofins>
+                <CST>01</CST>
+                <vBCPisCofins>8774.20</vBCPisCofins>
+                <pAliqPis>0.65</pAliqPis>
+                <pAliqCofins>3.00</pAliqCofins>
+                <vPis>57.03</vPis>
+                <vCofins>263.23</vCofins>
+                <tpRetPisCofins>0</tpRetPisCofins>
+              </piscofins>
+              <vRetCP>722.34</vRetCP>
+            </tribFed>
+            <totTrib>
+              <pTotTrib>
+                <pTotTribFed>13.45</pTotTribFed>
+                <pTotTribEst>0.00</pTotTribEst>
+                <pTotTribMun>5.00</pTotTribMun>
+              </pTotTrib>
+            </totTrib>
+          </trib>
+        </valores>
+      </infDPS>
+    </DPS>
+  </infNFSe>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <Reference URI="#NFS31470062410100000000000000000000000000000000000001">
+        <DigestValue>dGVzdGUtZGlnZXN0LWRvYy0xLW5mc2UtbmFjaW9uYWw=</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>U2lnbmF0dXJlVmFsdWVEb2MxRXhlbXBsYXJDb21wbGV0bw==</SignatureValue>
+  </Signature>
+</NFSe>

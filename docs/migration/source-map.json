@@ -1,0 +1,642 @@
+[
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/audit_logger.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/audit_logger.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/crypto_vault.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/crypto_vault.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/lgpd_service.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/lgpd_service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/mfa_totp.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/mfa_totp.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/models.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/router.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/schemas.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/seguranca/__init__.py",
+    "destination": "services/svc-security-iam/src/svc_security_iam/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_10.py",
+    "destination": "services/svc-security-iam/tests/test_feature_10.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/cnpj_validator.py",
+    "destination": "services/svc-companies/src/svc_companies/cnpj_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/models.py",
+    "destination": "services/svc-companies/src/svc_companies/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/rbac.py",
+    "destination": "services/svc-companies/src/svc_companies/rbac.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/router.py",
+    "destination": "services/svc-companies/src/svc_companies/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/schemas.py",
+    "destination": "services/svc-companies/src/svc_companies/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/service.py",
+    "destination": "services/svc-companies/src/svc_companies/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/multiempresa/__init__.py",
+    "destination": "services/svc-companies/src/svc_companies/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_09.py",
+    "destination": "services/svc-companies/tests/test_feature_09.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/calendar_engine.py",
+    "destination": "services/svc-obligations/src/svc_obligations/calendar_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/models.py",
+    "destination": "services/svc-obligations/src/svc_obligations/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/router.py",
+    "destination": "services/svc-obligations/src/svc_obligations/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/schemas.py",
+    "destination": "services/svc-obligations/src/svc_obligations/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/service.py",
+    "destination": "services/svc-obligations/src/svc_obligations/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/obrigacoes/__init__.py",
+    "destination": "services/svc-obligations/src/svc_obligations/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_01.py",
+    "destination": "services/svc-obligations/tests/test_feature_01.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/file_validator.py",
+    "destination": "services/svc-documents/src/svc_documents/file_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/models.py",
+    "destination": "services/svc-documents/src/svc_documents/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/router.py",
+    "destination": "services/svc-documents/src/svc_documents/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/schemas.py",
+    "destination": "services/svc-documents/src/svc_documents/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/service.py",
+    "destination": "services/svc-documents/src/svc_documents/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/documentos/__init__.py",
+    "destination": "services/svc-documents/src/svc_documents/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_02.py",
+    "destination": "services/svc-documents/tests/test_feature_02.py"
+  },
+  {
+    "source": "pdf/app/main.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/main.py"
+  },
+  {
+    "source": "pdf/app/__init__.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/__init__.py"
+  },
+  {
+    "source": "pdf/app/services/merge_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/merge_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/number_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/number_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/organize_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/organize_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/repair_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/repair_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/rotate_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/rotate_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/split_pdf.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/split_pdf.py"
+  },
+  {
+    "source": "pdf/app/services/__init__.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/services/__init__.py"
+  },
+  {
+    "source": "pdf/app/static/app.js",
+    "destination": "frontend/assets/app.js"
+  },
+  {
+    "source": "pdf/app/static/index.html",
+    "destination": "frontend/index.html"
+  },
+  {
+    "source": "pdf/app/static/styles.css",
+    "destination": "frontend/assets/style.css"
+  },
+  {
+    "source": "pdf/app/utils/files.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/utils/files.py"
+  },
+  {
+    "source": "pdf/app/utils/page_ranges.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/utils/page_ranges.py"
+  },
+  {
+    "source": "pdf/app/utils/__init__.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/utils/__init__.py"
+  },
+  {
+    "source": "pdf/app/validators/pdf_validator.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/validators/pdf_validator.py"
+  },
+  {
+    "source": "pdf/app/validators/__init__.py",
+    "destination": "services/svc-pdf-tools/src/svc_pdf_tools/validators/__init__.py"
+  },
+  {
+    "source": "pdf/tests/conftest.py",
+    "destination": "services/svc-pdf-tools/tests/conftest.py"
+  },
+  {
+    "source": "pdf/tests/test_api.py",
+    "destination": "services/svc-pdf-tools/tests/test_api.py"
+  },
+  {
+    "source": "pdf/tests/test_services.py",
+    "destination": "services/svc-pdf-tools/tests/test_services.py"
+  },
+  {
+    "source": "nfse/app/exporter.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/exporter.py"
+  },
+  {
+    "source": "nfse/app/main.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/main.py"
+  },
+  {
+    "source": "nfse/app/models.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/models.py"
+  },
+  {
+    "source": "nfse/app/parser.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/parser.py"
+  },
+  {
+    "source": "nfse/app/retencoes.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/retencoes.py"
+  },
+  {
+    "source": "nfse/app/sample_generator.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/sample_generator.py"
+  },
+  {
+    "source": "nfse/app/storage.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/storage.py"
+  },
+  {
+    "source": "nfse/app/__init__.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/__init__.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_events.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_events.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_models.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_models.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_parser_abrasf.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_parser_abrasf.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_parser_municipal.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_parser_municipal.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_parser_national.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_parser_national.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_pipeline.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_pipeline.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_reporting.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_reporting.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_resolver.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_resolver.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_rules_engine.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_rules_engine.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_security.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_security.py"
+  },
+  {
+    "source": "st_difal_web/core/nfse_xml.py",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/multilayout/nfse_xml.py"
+  },
+  {
+    "source": "nfse/tests/test_exporter.py",
+    "destination": "services/svc-nfse-engine/tests/strict/test_exporter.py"
+  },
+  {
+    "source": "nfse/tests/test_export_retencoes.py",
+    "destination": "services/svc-nfse-engine/tests/strict/test_export_retencoes.py"
+  },
+  {
+    "source": "nfse/tests/test_retencoes.cjs",
+    "destination": "services/svc-nfse-engine/tests/strict/test_retencoes.cjs"
+  },
+  {
+    "source": "nfse/tests/test_retencoes.py",
+    "destination": "services/svc-nfse-engine/tests/strict/test_retencoes.py"
+  },
+  {
+    "source": "nfse/data/samples/NFSe_BH_Doc18_Retencao_Condominio_xCpl.xml",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/samples/NFSe_BH_Doc18_Retencao_Condominio_xCpl.xml"
+  },
+  {
+    "source": "nfse/data/samples/NFSe_Paracatu_Doc1_Retencao_ISS_INSS.xml",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/samples/NFSe_Paracatu_Doc1_Retencao_ISS_INSS.xml"
+  },
+  {
+    "source": "nfse/data/samples/NFSe_RJ_Doc20_Sem_NBS_Publicidade.xml",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/samples/NFSe_RJ_Doc20_Sem_NBS_Publicidade.xml"
+  },
+  {
+    "source": "nfse/data/samples/NFSe_SP_Doc16_Simples_Nacional_Sem_Retencao.xml",
+    "destination": "services/svc-nfse-engine/src/svc_nfse_engine/samples/NFSe_SP_Doc16_Simples_Nacional_Sem_Retencao.xml"
+  },
+  {
+    "source": "st_difal_web/core/document_comparison.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/document_comparison.py"
+  },
+  {
+    "source": "st_difal_web/core/fiscal_registration.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/fiscal_registration.py"
+  },
+  {
+    "source": "st_difal_web/core/models.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/models.py"
+  },
+  {
+    "source": "st_difal_web/core/ncm_comparison.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/ncm_comparison.py"
+  },
+  {
+    "source": "st_difal_web/core/nfe_parser.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/nfe_parser.py"
+  },
+  {
+    "source": "st_difal_web/core/reporting.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/reporting.py"
+  },
+  {
+    "source": "st_difal_web/core/zip_comparison.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/zip_comparison.py"
+  },
+  {
+    "source": "st_difal_web/core/zip_extractor.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/zip_extractor.py"
+  },
+  {
+    "source": "st_difal_web/core/__init__.py",
+    "destination": "services/svc-nfe-difal/src/svc_nfe_difal/core/__init__.py"
+  },
+  {
+    "source": "st_difal_web/tests/sample_data.py",
+    "destination": "services/svc-nfe-difal/tests/sample_data.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_core.py",
+    "destination": "services/svc-nfe-difal/tests/test_core.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_zip_comparison.py",
+    "destination": "services/svc-nfe-difal/tests/test_zip_comparison.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_zip_extractor.py",
+    "destination": "services/svc-nfe-difal/tests/test_zip_extractor.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/matching_engine.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/matching_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/models.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/ofx_parser.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/ofx_parser.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/router.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/schemas.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/service.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/conciliacao/__init__.py",
+    "destination": "services/svc-bank-reconciliation/src/svc_bank_reconciliation/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_03.py",
+    "destination": "services/svc-bank-reconciliation/tests/test_feature_03.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/aging_calculator.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/aging_calculator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/approval_engine.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/approval_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/barcode_validator.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/barcode_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/models.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/pix_validator.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/pix_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/router.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/schemas.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/service.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/financeiro/__init__.py",
+    "destination": "services/svc-finance-bpo/src/svc_finance_bpo/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_04.py",
+    "destination": "services/svc-finance-bpo/tests/test_feature_04.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/error_translator.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/error_translator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/models.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/router.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/schemas.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/service.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/xml_validator.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/xml_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/integracoes_fiscais/__init__.py",
+    "destination": "services/svc-fiscal-gov/src/svc_fiscal_gov/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_05.py",
+    "destination": "services/svc-fiscal-gov/tests/test_feature_05.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/models.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/router.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/schemas.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/service.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/ticket_validator.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/ticket_validator.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/portal_cliente/__init__.py",
+    "destination": "services/svc-client-portal/src/svc_client_portal/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_06.py",
+    "destination": "services/svc-client-portal/tests/test_feature_06.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/cashflow_engine.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/cashflow_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/dre_engine.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/dre_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/kpi_engine.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/kpi_engine.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/models.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/router.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/schemas.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/service.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/analytics/__init__.py",
+    "destination": "services/svc-analytics-dre/src/svc_analytics_dre/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_07.py",
+    "destination": "services/svc-analytics-dre/tests/test_feature_07.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/anomaly_detector.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/anomaly_detector.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/classification_suggester.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/classification_suggester.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/executive_summary.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/executive_summary.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/models.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/models.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/ocr_extractor.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/ocr_extractor.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/router.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/router.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/schemas.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/schemas.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/service.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/service.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/features/automacao_ia/__init__.py",
+    "destination": "services/svc-accounting-ai/src/svc_accounting_ai/__init__.py"
+  },
+  {
+    "source": "portalcontabilidades/tests/features/test_feature_08.py",
+    "destination": "services/svc-accounting-ai/tests/test_feature_08.py"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/core/tax_ids.py",
+    "destination": "libs/supreme_common/src/supreme_common/tax_ids.py"
+  },
+  {
+    "source": "nfse/static/index.html",
+    "destination": "frontend/index.html"
+  },
+  {
+    "source": "nfse/static/css/style.css",
+    "destination": "frontend/assets/style.css"
+  },
+  {
+    "source": "nfse/static/js/app.js",
+    "destination": "frontend/assets/app.js"
+  },
+  {
+    "source": "nfse/static/js/retencoes.js",
+    "destination": "frontend/assets/retencoes.js"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/static/index.html",
+    "destination": "frontend/index.html"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/static/css/style.css",
+    "destination": "frontend/assets/style.css"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/static/js/api.js",
+    "destination": "frontend/assets/api.js"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/static/js/app.js",
+    "destination": "frontend/assets/app.js"
+  },
+  {
+    "source": "portalcontabilidades/src/portalcontabilidades/static/js/charts.js",
+    "destination": "frontend/assets/charts.js"
+  },
+  {
+    "source": "st_difal_web/tests/nfse_samples.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/nfse_samples.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_events.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_events.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_parsers.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_parsers.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_reporting.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_reporting.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_resolver.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_resolver.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_rules_engine.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_rules_engine.py"
+  },
+  {
+    "source": "st_difal_web/tests/test_nfse_security.py",
+    "destination": "services/svc-nfse-engine/tests/multilayout/test_nfse_security.py"
+  }
+]

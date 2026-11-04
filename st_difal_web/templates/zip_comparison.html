@@ -1,0 +1,113 @@
+{% macro notes_table(id, title, notes) %}
+<article class="reconciliation-group">
+  <h3>{{ title }}</h3>
+  <div class="field">
+    <label for="{{ id }}-search">Filtrar {{ title | lower }}</label>
+    <input id="{{ id }}-search" type="search" data-reconciliation-filter="{{ id }}" aria-controls="{{ id }}" placeholder="Chave, número, emitente ou destinatário">
+  </div>
+  <p id="{{ id }}-count" role="status" aria-live="polite">{{ notes | length }} nota(s)</p>
+  <div class="table-wrap" tabindex="0" role="region" aria-label="{{ title }}: tabela com rolagem horizontal">
+    <table id="{{ id }}" class="sortable-table" data-table-name="{{ title }}">
+      <caption class="visually-hidden">{{ title }}</caption>
+      <thead><tr>
+        <th scope="col">Chave</th><th scope="col">Número</th><th scope="col">Série</th>
+        <th scope="col" data-sort-type="date">Data Emissão</th><th scope="col">Emitente</th>
+        <th scope="col">Destinatário</th><th scope="col" class="number">Valor Total</th>
+        <th scope="col" class="number">ICMS</th><th scope="col" class="number">ICMS ST</th>
+      </tr></thead>
+      <tbody>
+        {% for note in notes %}<tr>
+          <td class="reconciliation-key">{{ note.chave }}</td><td>{{ note.numero }}</td><td>{{ note.serie }}</td>
+          <td>{{ note.data_emissao or '—' }}</td><td>{{ note.nome_emitente }}<br><small>{{ note.cnpj_emitente }}</small></td>
+          <td>{{ note.nome_destinatario }}<br><small>{{ note.cnpj_destinatario }}</small></td>
+          <td class="number">{{ note.valor_total_float | brl }}</td><td class="number">{{ note.valor_icms | brl }}</td>
+          <td class="number">{{ note.valor_icms_st | brl }}</td>
+        </tr>{% endfor %}
+        <tr data-table-empty {% if notes %}hidden{% endif %}><td colspan="9">Nenhuma nota neste grupo ou correspondente ao filtro.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</article>
+{% endmacro %}
+
+<section id="conciliacao-zips" class="panel" role="tabpanel" data-tab-panel hidden>
+  <div class="section-heading"><div>
+    <p class="eyebrow">Conciliação fiscal</p>
+    <h2>Comparação de NF-e entre Pacotes ZIP</h2>
+    <p>Cruze as notas fiscais enviadas pelo cliente com o lote extraído da SEFAZ/Portal para identificar omissões e faltas.</p>
+  </div></div>
+  <form action="{{ url_for('compare_zips') }}" method="post" enctype="multipart/form-data" class="async-form form-grid">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="field"><label for="zip_cliente">Arquivo ZIP: Enviado pelo cliente</label>
+      <input id="zip_cliente" name="zip_cliente" type="file" accept=".zip,application/zip" required aria-describedby="zip-comparison-help"></div>
+    <div class="field"><label for="zip_portal">Arquivo ZIP: Extraído portal</label>
+      <input id="zip_portal" name="zip_portal" type="file" accept=".zip,application/zip" required aria-describedby="zip-comparison-help"></div>
+    <p id="zip-comparison-help">Até 5.000 XMLs por ZIP, 10.000 entradas totais e 100 MB descompactados por ZIP; até 55 MB somando os dois uploads. Todas as NF-es devem ter um CNPJ em comum, como emitente ou destinatário. A comparação é feita em memória.</p>
+    <button class="button button-primary" type="submit" data-pending-label="Cruzando notas dos ZIPs…">Comparar Pacotes ZIP</button>
+  </form>
+  {% if state.zip_comparison_result %}
+  {% set result = state.zip_comparison_result %}
+  {% set summary = result.resumo %}
+  <p><strong>Cliente:</strong> {{ result.nome_arquivo_cliente }} · <strong>Portal:</strong> {{ result.nome_arquivo_portal }}</p>
+  <p class="message message-success"><strong>Empresa validada.</strong> CNPJ(s) comum(ns) a todas as NF-es dos dois pacotes: {{ result.cnpjs_empresa | join(', ') }}.</p>
+  <div class="download-bar">
+    <a class="button button-primary" href="{{ url_for('download_zip_comparison_excel') }}">Baixar Relatório Excel (.xlsx)</a>
+    <a class="button button-secondary" href="{{ url_for('download_zip_comparison_json') }}">Baixar JSON</a>
+    <details><summary>Baixar CSVs</summary><div class="download-bar">
+      {% for group, label in [('apenas-cliente', 'Apenas Cliente'), ('apenas-portal', 'Apenas Portal'), ('em-ambos', 'Em Ambos'), ('divergencias', 'Divergências')] %}
+      <a class="button button-secondary" href="{{ url_for('download_zip_comparison_csv', grupo=group) }}">{{ label }} (.csv)</a>
+      {% endfor %}
+    </div></details>
+  </div>
+  <div class="metric-grid reconciliation-metrics">
+    {% for label, count, value, status in [
+      ('Total Cliente', summary.total_cliente, summary.valor_total_cliente, ''),
+      ('Total Portal', summary.total_portal, summary.valor_total_portal, ''),
+      ('Faltando no Portal (Apenas Cliente)', summary.total_apenas_cliente, summary.valor_apenas_cliente, 'warning'),
+      ('Faltando no Cliente (Apenas Portal)', summary.total_apenas_portal, summary.valor_apenas_portal, 'danger'),
+      ('Conciliadas (Em Ambos)', summary.total_comuns, summary.valor_comuns, 'success'),
+      ('Divergências de Valor', summary.total_divergencias, summary.totais_por_grupo.divergencias.valor_total, 'danger' if summary.total_divergencias else 'success')
+    ] %}
+    <article class="metric metric-{{ status }}"><span>{{ label }}</span><strong>{{ count }} nota(s)</strong><span>{{ value | brl }}</span></article>
+    {% endfor %}
+  </div>
+  <p>Notas únicas por pacote. Valores de conciliadas e divergências usam o lado Cliente. Divergências incluem diferenças maiores que R$ 0,01 em vNF, ICMS ou ICMS ST. Consulte os avisos antes de concluir a conferência.</p>
+  {% if result.issues_cliente or result.issues_portal %}
+  <details class="reconciliation-issues" open><summary>Avisos e rejeições ({{ result.issues_cliente | length + result.issues_portal | length }})</summary>
+    {% for label, issues in [('Cliente', result.issues_cliente), ('Portal', result.issues_portal)] %}
+    {% if issues %}<h3>{{ label }}</h3><ul>{% for issue in issues %}<li>{{ issue.filename }}: {{ issue.message }}</li>{% endfor %}</ul>{% endif %}
+    {% endfor %}
+  </details>
+  {% endif %}
+  {{ notes_table('zip-only-cliente', 'Notas Faltando no Portal', result.apenas_cliente) }}
+  {{ notes_table('zip-only-portal', 'Notas Faltando no Cliente', result.apenas_portal) }}
+  <article class="reconciliation-group">
+    <h3>Divergências de Valores</h3>
+    <div class="field"><label for="zip-divergences-search">Filtrar divergências</label>
+      <input id="zip-divergences-search" type="search" data-reconciliation-filter="zip-divergences" aria-controls="zip-divergences" placeholder="Chave, número ou campo divergente"></div>
+    <p id="zip-divergences-count" role="status" aria-live="polite">{{ result.divergencias | length }} nota(s)</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Divergências: tabela com rolagem horizontal">
+      <table id="zip-divergences" class="sortable-table" data-table-name="Divergências de Valores">
+        <caption class="visually-hidden">Divergências de Valores</caption>
+        <thead><tr><th scope="col">Chave</th><th scope="col">Número</th>
+          <th scope="col" class="number">Valor no Cliente</th><th scope="col" class="number">Valor no Portal</th>
+          <th scope="col" class="number">Diferença R$ (vNF)</th>
+          <th scope="col" class="number">ICMS Cliente / Portal</th><th scope="col" class="number">ST Cliente / Portal</th>
+          <th scope="col">Campos divergentes</th></tr></thead>
+        <tbody>{% for item in result.divergencias %}<tr>
+          <td class="reconciliation-key">{{ item.chave }}</td><td>{{ item.numero }}</td>
+          <td class="number">{{ item.valor_cliente | brl }}</td><td class="number">{{ item.valor_portal | brl }}</td>
+          <td class="number">{{ item.diferenca | brl }}</td>
+          <td class="number">{{ item.nota_cliente.valor_icms | brl }} / {{ item.nota_portal.valor_icms | brl }}</td>
+          <td class="number">{{ item.nota_cliente.valor_icms_st | brl }} / {{ item.nota_portal.valor_icms_st | brl }}</td>
+          <td>{{ item.campos_divergentes | join(', ') }}</td>
+        </tr>{% endfor %}
+        <tr data-table-empty {% if result.divergencias %}hidden{% endif %}><td colspan="8">Nenhuma divergência neste grupo ou correspondente ao filtro.</td></tr></tbody>
+      </table>
+    </div>
+  </article>
+  {{ notes_table('zip-common', 'Notas Conciliadas em Ambos', result.em_ambos) }}
+  {% else %}
+  <div class="empty-state"><h3>Selecione os dois pacotes para começar</h3><p>Após a comparação, as notas exclusivas, conciliadas e divergentes aparecerão aqui, com relatórios para download.</p></div>
+  {% endif %}
+</section>

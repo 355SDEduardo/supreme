@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Conferidor NF-e WEB</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+
+<body>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Conferência tributária</p>
+      <h1>NF-e WEB</h1>
+      <p>Leitura de XML, comparação NCM/ST e relatórios fiscais</p>
+    </div>
+    {% if state.nfes or state.zip_comparison_result or state.document_result or state.nfse_state %}
+    <form action="{{ url_for('clear_session_state') }}" method="post"
+      data-confirm="Remover os dados temporários desta sessão?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="button button-secondary" type="submit">Limpar sessão</button>
+    </form>
+    {% endif %}
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Áreas da aplicação">
+    <button type="button" role="tab" aria-controls="importacao" data-tab-target="importacao">Importar XMLs</button>
+    <button type="button" role="tab" aria-controls="resumo" data-tab-target="resumo">Resumo</button>
+    <button type="button" role="tab" aria-controls="notas" data-tab-target="notas">Nota a nota</button>
+    <button type="button" role="tab" aria-controls="produtos" data-tab-target="produtos">Produtos</button>
+    <button type="button" role="tab" aria-controls="conciliacao-zips" data-tab-target="conciliacao-zips">Comparar ZIPs (Cliente × Portal)</button>
+    <button type="button" role="tab" aria-controls="logs" data-tab-target="logs">Logs</button>
+    <button type="button" role="tab" aria-controls="auditoria-nfse" data-tab-target="auditoria-nfse">NFS-e</button>
+  </nav>
+
+  <main id="conteudo" class="page-shell">
+    {% include 'nfse.html' %}
+    <p id="table-sort-status" class="visually-hidden" role="status" aria-live="polite"></p>
+    <div class="messages" aria-live="polite" aria-atomic="true">
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="message message-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+
+    <section id="importacao" class="panel" role="tabpanel" data-tab-panel>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Etapa 1</p>
+          <h2>Processar XMLs de NF-e</h2>
+          <p>Selecione XMLs avulsos, pacotes ZIP ou uma pasta. Os ZIPs são descompactados em memória e os arquivos são analisados sem serem mantidos no servidor.
+          </p>
+        </div>
+      </div>
+
+      <form class="stack-form async-form" action="{{ url_for('process_xmls') }}" method="post"
+        enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field">
+          <label for="xml_files">Arquivos XML ou ZIP</label>
+          <input id="xml_files" name="xml_files" type="file" accept=".xml,.zip,application/xml,text/xml,application/zip,application/x-zip-compressed" multiple>
+          <small>Selecione arquivos XML avulsos ou pacotes compactados em .ZIP.</small>
+        </div>
+        <div class="field">
+          <label for="xml_folder">Ou uma pasta com XMLs</label>
+          <input id="xml_folder" name="xml_folder" type="file" accept=".xml,application/xml,text/xml" multiple
+            webkitdirectory directory>
+          <small>Até 200 arquivos enviados e 55 MB por requisição. Cada ZIP aceita até 500 entradas; cada XML, até 5 MB. Limite de 100 MB descompactados por lote. A seleção de pasta depende do navegador.</small>
+        </div>
+        <div class="field">
+          <label for="fiscal_file">Base fiscal JSON opcional</label>
+          <input id="fiscal_file" name="fiscal_file" type="file" accept=".json,application/json">
+          <small>Usada somente neste processamento. Sem arquivo, será usada a base fiscal local.</small>
+        </div>
+        <button class="button button-primary" type="submit" data-pending-label="Processando XMLs…">Processar
+          XMLs</button>
+      </form>
+
+      {% if state.issues %}
+      <div class="callout callout-warning" tabindex="-1">
+        <h3>Arquivos rejeitados</h3>
+        <ul>
+          {% for issue in state.issues %}
+          <li><strong>{{ issue.filename }}</strong>: {{ issue.message }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </section>
+
+    <section id="resumo" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Visão geral</p>
+          <h2>Totais consolidados</h2>
+        </div>
+        {% if state.nfes %}
+        <div class="actions">
+          <a class="button button-secondary" href="{{ url_for('download_report_json') }}">Baixar JSON</a>
+          <a class="button button-secondary" href="{{ url_for('download_report_excel') }}">Baixar Excel</a>
+          <a class="button button-secondary" href="{{ url_for('download_csv', dataset='notas') }}">CSV de notas</a>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if state.nfes %}
+      <div class="metric-grid">
+        <article class="metric"><span>Notas lidas</span><strong>{{ totals.notas }}</strong></article>
+        <article class="metric"><span>Valor dos produtos</span><strong>{{ totals.valor_produtos|brl }}</strong>
+        </article>
+        <article class="metric"><span>ICMS próprio</span><strong>{{ totals.valor_icms|brl }}</strong></article>
+        <article class="metric"><span>ICMS ST</span><strong>{{ totals.valor_icms_st|brl }}</strong></article>
+        <article class="metric"><span>Valor total das NFs</span><strong>{{ totals.valor_total|brl }}</strong></article>
+      </div>
+
+      <h3>Totais por nota fiscal</h3>
+      <div class="table-wrap" tabindex="0" aria-label="Tabela rolável de totais por nota">
+        <table class="sortable-table" data-table-name="Totais por nota fiscal">
+          <thead>
+            <tr>
+              <th scope="col">Arquivo</th>
+              <th scope="col">NF-e</th>
+              <th scope="col">Emissor</th>
+              <th scope="col">Destinatário</th>
+              <th scope="col" data-sort-type="date">Emissão</th>
+              <th scope="col">CFOPs</th>
+              <th scope="col" class="number">Produtos</th>
+              <th scope="col" class="number">ICMS</th>
+              <th scope="col" class="number">ICMS ST</th>
+              <th scope="col" class="number">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in notes %}
+            <tr>
+              <td>{{ row.arquivo }}</td>
+              <td>{{ row.numero }} / série {{ row.serie or '—' }}</td>
+              <td>{{ row.emissor or '—' }}<small>{{ row.cnpj_emissor }}</small></td>
+              <td>{{ row.destinatario or '—' }}<small>{{ row.cnpj_destinatario }}</small></td>
+              <td>{{ row.data_emissao or '—' }}</td>
+              <td>{{ row.cfops }}</td>
+              <td class="number">{{ row.valor_produtos|brl }}</td>
+              <td class="number">{{ row.valor_icms|brl }}</td>
+              <td class="number">{{ row.valor_icms_st|brl }}</td>
+              <td class="number">{{ row.valor_total|brl }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="split-panels">
+        <article>
+          <div class="subheading">
+            <h3>Por CFOP</h3>
+            <a href="{{ url_for('download_csv', dataset='cfop') }}">Baixar CSV</a>
+          </div>
+          <div class="table-wrap" tabindex="0">
+            <table class="sortable-table" data-table-name="Totais por CFOP">
+              <thead>
+                <tr>
+                  <th scope="col">CFOP</th>
+                  <th scope="col" data-sort-type="number">Itens</th>
+                  <th scope="col" data-sort-type="number">Notas</th>
+                  <th scope="col" class="number">Produtos</th>
+                  <th scope="col" class="number">ICMS ST</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in cfop_rows %}
+                <tr>
+                  <td>{{ row.cfop }}</td>
+                  <td>{{ row.quantidade_itens }}</td>
+                  <td>{{ row.quantidade_notas }}</td>
+                  <td class="number">{{ row.valor_produtos|brl }}</td>
+                  <td class="number">{{ row.valor_icms_st|brl }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </article>
+        <article>
+          <div class="subheading">
+            <h3>Por CST / CSOSN</h3>
+            <a href="{{ url_for('download_csv', dataset='cst') }}">Baixar CSV</a>
+          </div>
+          <div class="table-wrap" tabindex="0">
+            <table class="sortable-table" data-table-name="Totais por CST ou CSOSN">
+              <thead>
+                <tr>
+                  <th scope="col">CST</th>
+                  <th scope="col" data-sort-type="number">Itens</th>
+                  <th scope="col" data-sort-type="number">Notas</th>
+                  <th scope="col" class="number">Produtos</th>
+                  <th scope="col" class="number">ICMS ST</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in cst_rows %}
+                <tr>
+                  <td>{{ row.cst }}</td>
+                  <td>{{ row.quantidade_itens }}</td>
+                  <td>{{ row.quantidade_notas }}</td>
+                  <td class="number">{{ row.valor_produtos|brl }}</td>
+                  <td class="number">{{ row.valor_icms_st|brl }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <h3>Nenhuma nota processada</h3>
+        <p>Importe os XMLs para visualizar totais e relatórios.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section id="notas" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Detalhamento</p>
+          <h2>Nota a nota</h2>
+        </div>
+      </div>
+      {% if state.nfes %}
+      <div class="details-list">
+        {% for note in state.nfes %}
+        <details {% if loop.first %}open{% endif %}>
+          <summary>NF-e {{ note.numero or 'sem número' }} · {{ note.nome_emitente or note.filename }} · {{
+            note.valor_total|brl }}</summary>
+          <dl class="note-metadata">
+            <div>
+              <dt>Arquivo</dt>
+              <dd>{{ note.filename }}</dd>
+            </div>
+            <div>
+              <dt>Chave</dt>
+              <dd class="break-all">{{ note.chave or '—' }}</dd>
+            </div>
+            <div>
+              <dt>Emissão</dt>
+              <dd>{{ note.data_emissao or '—' }}</dd>
+            </div>
+            <div>
+              <dt>Destinatário</dt>
+              <dd>{{ note.nome_destinatario or '—' }}</dd>
+            </div>
+          </dl>
+          <div class="table-wrap" tabindex="0">
+            <table class="sortable-table" data-table-name="Produtos da NF-e {{ note.numero or 'sem número' }}">
+              <thead>
+                <tr>
+                  <th scope="col">Item</th>
+                  <th scope="col">Código</th>
+                  <th scope="col">Descrição</th>
+                  <th scope="col">NCM</th>
+                  <th scope="col">CST</th>
+                  <th scope="col">CFOP</th>
+                  <th scope="col" class="number">Qtd.</th>
+                  <th scope="col" class="number">Total</th>
+                  <th scope="col">ST</th>
+                  <th scope="col" data-sort-type="number">MVA</th>
+                  <th scope="col">CEST</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for product in note.produtos %}
+                <tr>
+                  <td>{{ product.numero }}</td>
+                  <td>{{ product.codigo }}</td>
+                  <td>{{ product.descricao }}</td>
+                  <td>{{ product.ncm }}</td>
+                  <td>{{ product.cst or '—' }}</td>
+                  <td>{{ product.cfop }}</td>
+                  <td class="number">{{ product.quantidade|decimal_br }} {{ product.unidade }}</td>
+                  <td class="number">{{ product.valor_total|brl }}</td>
+                  <td>{{ product.status_st or 'Não analisado' }}</td>
+                  <td>{{ product.mva or '—' }}</td>
+                  <td>{{ product.cest or '—' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <h3>Nenhuma nota disponível</h3>
+        <p>Processe XMLs para abrir o detalhamento individual.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section id="produtos" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Pesquisa</p>
+          <h2>Produtos</h2>
+          <p id="product-count" role="status" aria-live="polite" aria-atomic="true">{{ products|length }} produto(s)</p>
+        </div>
+        {% if state.nfes %}<a id="products-export" class="button button-secondary"
+          href="{{ url_for('download_csv', dataset='produtos') }}">Exportar CSV filtrado</a>{% endif %}
+      </div>
+      {% if state.nfes %}
+      <form id="product-filters" class="filter-grid" role="search" aria-label="Filtrar produtos" autocomplete="off">
+        <div class="field"><label for="filter-note">Nota</label><select id="filter-note" name="nota">
+            <option value="">Todas</option>{% for option in note_options %}<option value="{{ option }}">{{ option }}
+            </option>{% endfor %}
+          </select></div>
+        <div class="field"><label for="filter-operacao">Operação</label><select id="filter-operacao" name="operacao">
+            <option value="">Todas</option>
+            <option value="estadual">Estadual (CFOP 5)</option>
+            <option value="interestadual">Interestadual (CFOP 6)</option>
+          </select></div>
+        <div class="field"><label for="filter-cfop">CFOP</label><select id="filter-cfop" name="cfop">
+            <option value="">Todos</option>{% for option in cfop_options %}<option value="{{ option }}">{{ option }}
+            </option>{% endfor %}
+          </select></div>
+        <div class="field"><label for="filter-cst">CST / CSOSN</label><select id="filter-cst" name="cst">
+            <option value="">Todos</option>{% for option in cst_options %}<option value="{{ option }}">{{ option }}
+            </option>{% endfor %}
+          </select></div>
+        <div class="field"><label for="filter-status">Status</label><select id="filter-status" name="status">
+            <option value="">Todos</option>
+            <option value="registered">Cadastrado</option>
+            <option value="unregistered">Não cadastrado</option>
+            <option value="applicable">ST aplicável</option>
+          </select></div>
+        <div class="field filter-search"><label for="filter-query">Código, descrição ou NCM</label><input
+            id="filter-query" name="q" type="search" autocomplete="off" placeholder="Digite para pesquisar"></div>
+        <div class="filter-actions">
+          <span id="active-filter-count">Nenhum filtro ativo.</span>
+          <button class="button button-secondary" id="clear-filters" type="button" disabled>Limpar filtros</button>
+        </div>
+      </form>
+      <div id="active-filters" class="active-filters" aria-label="Filtros ativos" hidden>
+        <strong>Filtros ativos:</strong>
+        <div id="active-filter-chips" class="filter-chips"></div>
+      </div>
+      <p id="destination-status" role="status" aria-live="polite"></p>
+      <dialog id="destination-dialog" aria-labelledby="destination-dialog-title"
+        aria-describedby="destination-dialog-message">
+        <form method="dialog">
+          <h3 id="destination-dialog-title">Aplicar destinação aos produtos com o mesmo NCM?</h3>
+          <p id="destination-dialog-message"></p>
+          <div class="destination-dialog-actions">
+            <button class="button button-primary" type="submit" value="all">Aplicar a todos</button>
+            <button class="button button-secondary" type="submit" value="one" autofocus>Somente este produto</button>
+            <button class="button button-secondary" type="submit" value="cancel">Voltar</button>
+          </div>
+        </form>
+      </dialog>
+      <div class="table-wrap" tabindex="0">
+        <table class="sortable-table" id="products-table" data-table-name="Produtos"
+          data-destination-url="{{ url_for('save_product_destination') }}" data-csrf-token="{{ csrf_token }}">
+          <thead>
+            <tr>
+              <th scope="col">NF-e</th>
+              <th scope="col">Item</th>
+              <th scope="col">Código</th>
+              <th scope="col">Descrição</th>
+              <th scope="col">NCM</th>
+              <th scope="col">CST</th>
+              <th scope="col">CFOP</th>
+              <th scope="col" class="number">Qtd.</th>
+              <th scope="col" class="number">Total</th>
+              <th scope="col">Destinação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in products %}
+            <tr data-note="{{ row.nfe }}" data-cfop="{{ row.cfop }}" data-cst="{{ row.cst }}" data-ncm="{{ row.ncm }}"
+              data-note-index="{{ row.note_index }}" data-product-index="{{ row.product_index }}"
+              data-note-key="{{ row.note_key }}" data-item="{{ row.item }}"
+              data-registration="{{ 'registered' if row.ncm_cadastrado == 'Sim' else ('unregistered' if row.ncm_cadastrado == 'Não' else '') }}"
+              data-applicable="{{ 'yes' if row.ncm_cadastrado == 'Sim' and row.st|lower == 'sim' else 'no' }}"
+              data-search="{{ (row.codigo ~ ' ' ~ row.descricao ~ ' ' ~ row.ncm)|lower }}">
+              <td>{{ row.nfe }}</td>
+              <td>{{ row.item }}</td>
+              <td>{{ row.codigo }}</td>
+              <td>{{ row.descricao }}</td>
+              <td>{{ row.ncm }}</td>
+              <td>{{ row.cst or '—' }}</td>
+              <td>{{ row.cfop }}</td>
+              <td class="number">{{ row.quantidade|decimal_br }} {{ row.unidade }}</td>
+              <td class="number">{{ row.valor_total|brl }}</td>
+              <td><select class="destination-select" aria-label="Destinação do item {{ row.item }} da NF-e {{ row.nfe }}"
+                  data-saved-value="{{ row.destinacao }}">
+                  <option value="" disabled {% if not row.destinacao %}selected{% endif %}>Selecione</option>
+                  {% for option in ['Comercialização', 'Uso e Consumo', 'Imobilizado'] %}
+                  <option value="{{ option }}" {% if row.destinacao == option %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select></td>
+            </tr>
+            {% endfor %}
+            <tr id="product-filter-empty" class="table-empty-row" data-table-empty hidden>
+              <td colspan="10">Nenhum produto corresponde aos filtros. Remova um filtro ou ajuste a pesquisa.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <h3>Nenhum produto disponível</h3>
+        <p>Os produtos aparecerão após o processamento dos XMLs.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section id="comparacao" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Conferência fiscal</p>
+          <h2>Comparação NCM / ST</h2>
+        </div>
+        {% if state.nfes %}
+        <div class="actions">
+          <form action="{{ url_for('compare_current_ncms') }}" method="post" class="async-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button class="button button-primary" type="submit" data-pending-label="Comparando…">Recomparar base
+              local</button>
+          </form>
+          <a class="button button-secondary" href="{{ url_for('download_comparison_json') }}">Baixar JSON</a>
+          <a class="button button-secondary" href="{{ url_for('download_csv', dataset='comparacao') }}">Baixar CSV</a>
+        </div>
+        {% endif %}
+      </div>
+      {% if state.nfes %}
+      <div class="metric-grid metric-grid-small">
+        <article class="metric"><span>NCMs analisados</span><strong>{{ state.comparison_summary.total_ncms }}</strong>
+        </article>
+        <article class="metric"><span>Cadastrados</span><strong>{{ state.comparison_summary.registered_ncms }}</strong>
+        </article>
+        <article class="metric"><span>Não cadastrados</span><strong>{{ state.comparison_summary.unregistered_ncms
+            }}</strong></article>
+      </div>
+      {% if state.comparison %}
+      <div class="table-wrap" tabindex="0">
+        <table class="sortable-table" data-table-name="Comparação NCM e ST">
+          <thead>
+            <tr>
+              <th scope="col">NCM</th>
+              <th scope="col">Posição</th>
+              <th scope="col">Subposição</th>
+              <th scope="col">Subitem</th>
+              <th scope="col">CFOPs</th>
+              <th scope="col">Cadastro</th>
+              <th scope="col">ST</th>
+              <th scope="col" data-sort-type="number">MVA</th>
+              <th scope="col">CEST</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in state.comparison %}
+            <tr>
+              <td>{{ item.ncm }}</td>
+              <td>{{ item.posicao or '—' }}</td>
+              <td>{{ item.subposicao or '—' }}</td>
+              <td>{{ item.item or '—' }}</td>
+              <td>{{ item.cfops|join(', ') }}</td>
+              <td>{{ 'Sim' if item.ncm_cadastrado else 'Não' }}</td>
+              <td>{{ item.st }}</td>
+              <td>{{ item.mva or '—' }}</td>
+              <td>{{ item.cest or '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <h3>Nenhum NCM elegível</h3>
+        <p>A comparação considera CFOPs iniciados por 61, 63, 66, 67, 68 e 69.</p>
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="empty-state">
+        <h3>Comparação ainda não executada</h3>
+        <p>Processe XMLs para comparar os NCMs elegíveis.</p>
+      </div>
+      {% endif %}
+    </section>
+
+    <section id="cadastro" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Dados locais</p>
+          <h2>Base fiscal</h2>
+          <p>{{ fiscal_count }} item(ns) cadastrado(s). A base fica somente nesta instalação.</p>
+        </div>
+      </div>
+      {% if fiscal_error %}<div class="message message-error">{{ fiscal_error }}</div>{% endif %}
+      <div class="split-panels">
+        <article>
+          <h3>Cadastrar NCM</h3>
+          <form class="form-grid async-form" action="{{ url_for('register_fiscal_item') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="field"><label for="ncm">NCM</label><input id="ncm" name="ncm" inputmode="numeric"
+                pattern="[0-9]{8}" maxlength="8" required><small>Exatamente oito dígitos.</small></div>
+            <div class="field"><label for="state">Estado</label><input id="state" name="state" maxlength="2" value="DF"
+                required></div>
+            <div class="field"><label for="position">Posição</label><input id="position" name="position"></div>
+            <div class="field"><label for="subposition">Subposição</label><input id="subposition" name="subposition">
+            </div>
+            <div class="field"><label for="subitem">Subitem</label><input id="subitem" name="subitem"></div>
+            <div class="field"><label for="internal_rate">Alíquota interna</label><input id="internal_rate"
+                name="internal_rate" placeholder="18%" required></div>
+            {% for name, label in [('reduced_base', 'Base reduzida'), ('deferral', 'Diferimento'), ('fcp', 'FCP'),
+            ('exemption', 'Isenção'), ('non_incidence', 'Não incidência'), ('st', 'ST'), ('suspension', 'Suspensão')] %}
+            <div class="field"><label for="{{ name }}">{{ label }}</label><select id="{{ name }}" name="{{ name }}"
+                required>
+                <option>Não se aplica</option>
+                <option>Sim</option>
+                <option>Consultar</option>
+              </select></div>
+            {% endfor %}
+            <div class="field"><label for="mva">MVA</label><input id="mva" name="mva" inputmode="decimal"
+                placeholder="40,5%"></div>
+            <div class="field"><label for="cest">CEST</label><input id="cest" name="cest" inputmode="numeric"
+                maxlength="10" placeholder="1234567"></div>
+            <div class="full-row"><button class="button button-primary" type="submit"
+                data-pending-label="Cadastrando…">Cadastrar item fiscal</button></div>
+          </form>
+        </article>
+        <article>
+          <h3>Importar base completa</h3>
+          <p>Substitui a base local depois de validar todos os registros. Use uma cópia sanitizada e mantenha backup do
+            arquivo original.</p>
+          <form class="stack-form async-form" action="{{ url_for('import_fiscal_catalog') }}" method="post"
+            enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <div class="field"><label for="catalog_file">Base fiscal JSON</label><input id="catalog_file"
+                name="catalog_file" type="file" accept=".json,application/json" required></div>
+            <label class="checkbox"><input type="checkbox" name="confirm_replace" value="yes" required> Confirmo que a
+              base local atual será substituída.</label>
+            <button class="button button-danger" type="submit" data-pending-label="Importando…">Importar e
+              substituir</button>
+          </form>
+        </article>
+      </div>
+    </section>
+
+    <section id="documentos" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Utilitário adicional</p>
+          <h2>Comparar lista TXT com PDF</h2>
+          <p>Procura cada linha do TXT no texto extraído do PDF.</p>
+        </div>
+        {% if state.document_result %}
+        <div class="actions"><a class="button button-secondary" href="{{ url_for('download_document_json') }}">Baixar
+            JSON</a><a class="button button-secondary" href="{{ url_for('download_document_text') }}">Baixar TXT</a>
+        </div>
+        {% endif %}
+      </div>
+      <form class="stack-form async-form" action="{{ url_for('compare_documents') }}" method="post"
+        enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="field"><label for="txt_file">Lista de produtos TXT</label><input id="txt_file" name="txt_file"
+            type="file" accept=".txt,text/plain" required><small>Até 2 MB e 10.000 produtos.</small></div>
+        <div class="field"><label for="pdf_file">Relatório PDF</label><input id="pdf_file" name="pdf_file" type="file"
+            accept=".pdf,application/pdf" required><small>Até 30 MB e 300 páginas.</small></div>
+        <button class="button button-primary" type="submit" data-pending-label="Comparando documentos…">Comparar TXT ×
+          PDF</button>
+      </form>
+      {% if state.document_result %}
+      {% set result = state.document_result %}
+      <div class="metric-grid metric-grid-small">
+        <article class="metric"><span>Total no TXT</span><strong>{{ result.resumo.total_txt }}</strong></article>
+        <article class="metric"><span>Encontrados</span><strong>{{ result.resumo.total_encontrados }}</strong></article>
+        <article class="metric"><span>Não encontrados</span><strong>{{ result.resumo.total_nao_encontrados }}</strong>
+        </article>
+      </div>
+      <div class="split-panels">
+        <article>
+          <h3>Encontrados</h3>
+          <div class="table-wrap" tabindex="0">
+            <table class="sortable-table" data-table-name="Produtos encontrados no PDF">
+              <thead>
+                <tr>
+                  <th scope="col">Produto</th>
+                  <th scope="col" data-sort-type="number">Página</th>
+                  <th scope="col">Trecho</th>
+                </tr>
+              </thead>
+              <tbody>{% for item in result.encontrados %}<tr>
+                  <td>{{ item.produto }}</td>
+                  <td>{{ item.pagina }}</td>
+                  <td>{{ item.trecho_pdf }}</td>
+                </tr>{% endfor %}</tbody>
+            </table>
+          </div>
+        </article>
+        <article>
+          <h3>Não encontrados</h3>{% if result.nao_encontrados %}<ul class="plain-list">{% for item in
+            result.nao_encontrados %}<li>{{ item.produto }}</li>{% endfor %}</ul>{% else %}<p>Todos os produtos foram
+            encontrados.</p>{% endif %}
+        </article>
+      </div>
+      {% endif %}
+    </section>
+
+    {% include 'zip_comparison.html' %}
+
+    <section id="logs" class="panel" role="tabpanel" data-tab-panel hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Sessão atual</p>
+          <h2>Logs operacionais</h2>
+          <p>Os logs evitam conteúdo fiscal e são descartados com a sessão.</p>
+        </div>
+      </div>
+      {% if state.logs %}<ol class="log-list">{% for entry in state.logs %}<li><code>{{ entry }}</code></li>{% endfor %}
+      </ol>{% else %}<div class="empty-state">
+        <h3>Sem eventos</h3>
+        <p>As operações desta sessão aparecerão aqui.</p>
+      </div>{% endif %}
+    </section>
+  </main>
+
+  <footer>
+    <p>Execução local por padrão. Não exponha este servidor na internet sem autenticação, HTTPS e proxy de produção.</p>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# User Global Rule: Nunca dê push em arquivos .txt e .pdf
+*.txt
+*.pdf
+
+# IDE and OS
+.DS_Store
+Thumbs.db

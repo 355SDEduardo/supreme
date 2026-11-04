@@ -1,0 +1,52 @@
+[project]
+name = "supreme"
+version = "1.0.0"
+description = "Plataforma contábil unificada em quatorze microserviços"
+requires-python = ">=3.12"
+dependencies = [
+  "supreme-common", "svc-security-iam", "svc-companies", "svc-obligations",
+  "svc-documents", "svc-pdf-tools", "svc-nfse-engine", "svc-nfe-difal",
+  "svc-federal-tax-audit", "svc-bank-reconciliation", "svc-finance-bpo",
+  "svc-fiscal-gov", "svc-client-portal", "svc-analytics-dre", "svc-accounting-ai",
+]
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.24", "httpx>=0.27", "ruff>=0.11", "pyyaml>=6"]
+[project.scripts]
+supreme = "cli.supreme_cli:main"
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[tool.uv]
+package = true
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cli*", "gateway*", "scripts*", "frontend*"]
+[tool.setuptools.package-data]
+frontend = ["**/*.html", "**/*.js", "**/*.css"]
+[tool.uv.workspace]
+members = ["libs/*", "services/*"]
+[tool.uv.sources]
+supreme-common = { workspace = true }
+svc-security-iam = { workspace = true }
+svc-companies = { workspace = true }
+svc-obligations = { workspace = true }
+svc-documents = { workspace = true }
+svc-pdf-tools = { workspace = true }
+svc-nfse-engine = { workspace = true }
+svc-nfe-difal = { workspace = true }
+svc-federal-tax-audit = { workspace = true }
+svc-bank-reconciliation = { workspace = true }
+svc-finance-bpo = { workspace = true }
+svc-fiscal-gov = { workspace = true }
+svc-client-portal = { workspace = true }
+svc-analytics-dre = { workspace = true }
+svc-accounting-ai = { workspace = true }
+[tool.pytest.ini_options]
+testpaths = ["tests", "libs/supreme_common/tests", "services"]
+addopts = "--import-mode=importlib"
+asyncio_mode = "auto"
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+[tool.ruff.lint]
+select = ["F"]

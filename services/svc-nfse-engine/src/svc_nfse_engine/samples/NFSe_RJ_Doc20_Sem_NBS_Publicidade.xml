@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">
+  <infNFSe Id="NFS33045572410400000000000000000000000000000000000020">
+    <xLocEmi>Rio de Janeiro</xLocEmi>
+    <xLocPrestacao>Rio de Janeiro</xLocPrestacao>
+    <nNFSe>4020</nNFSe>
+    <cLocIncid>3304557</cLocIncid>
+    <xLocIncid>Rio de Janeiro</xLocIncid>
+    <xTribNac>Consultoria em publicidade e propaganda</xTribNac>
+    <!-- xNBS ausente no doc 20 -->
+    <verAplic>EmissorWeb_1.5.0.0</verAplic>
+    <ambGer>1</ambGer>
+    <tpEmis>1</tpEmis>
+    <procEmi>2</procEmi>
+    <cStat>100</cStat>
+    <dhProc>2026-03-20T11:05:40-03:00</dhProc>
+    <nDFSe>845190</nDFSe>
+    <emit>
+      <CNPJ>45678901000133</CNPJ>
+      <xNome>RIO CRIATIVO COMUNICACAO INTEGRADA LTDA</xNome>
+      <enderNac>
+        <xLgr>Rua Visconde de Piraja</xLgr>
+        <nro>300</nro>
+        <xBairro>Ipanema</xBairro>
+        <cMun>3304557</cMun>
+        <UF>RJ</UF>
+        <CEP>22410002</CEP>
+      </enderNac>
+      <fone>2125210000</fone>
+      <email>fiscal@riocriativo.com.br</email>
+    </emit>
+    <valores>
+      <vBC>18000.00</vBC>
+      <pAliqAplic>5.00</pAliqAplic>
+      <vISSQN>900.00</vISSQN>
+      <vTotalRet>0.00</vTotalRet>
+      <vLiq>18000.00</vLiq>
+    </valores>
+    <DPS versao="1.01">
+      <infDPS Id="DPS33045572410400000000000000000000000000000000000020">
+        <tpAmb>1</tpAmb>
+        <dhEmi>2026-03-20T10:30:00-03:00</dhEmi>
+        <verAplic>EmissorWeb_1.4.0.26</verAplic>
+        <serie>900</serie>
+        <nDPS>4020</nDPS>
+        <dCompet>2026-03-20</dCompet>
+        <tpEmit>1</tpEmit>
+        <cLocEmi>3304557</cLocEmi>
+        <prest>
+          <CNPJ>45678901000133</CNPJ>
+          <regTrib>
+            <opSimpNac>1</opSimpNac>
+            <regEspTrib>0</regEspTrib>
+          </regTrib>
+        </prest>
+        <toma>
+          <CNPJ>67890123000144</CNPJ>
+          <xNome>VAREJO BRASIL LOGISTICA E DISTRIBUICAO S.A.</xNome>
+          <end>
+            <endNac>
+              <cMun>3304557</cMun>
+              <CEP>20040001</CEP>
+            </endNac>
+            <xLgr>Avenida Rio Branco</xLgr>
+            <nro>156</nro>
+            <xBairro>Centro</xBairro>
+          </end>
+        </toma>
+        <serv>
+          <locPrest>
+            <cLocPrestacao>3304557</cLocPrestacao>
+          </locPrest>
+          <cServ>
+            <cTribNac>100801</cTribNac>
+            <xDescServ>PLANEJAMENTO ESTRATEGICO DE MARKETING E GESTAO DE MIDIA DIGITAL PARA O Q1 2026.</xDescServ>
+            <!-- cNBS ausente no doc 20 -->
+          </cServ>
+          <infoCompl>
+            <xInfComp>PAGAMENTO VIA PIX PARA O CNPJ: 45678901000133. BANCO SANTANDER, AGENCIA: 3344, CONTA: 13009876-5. PEDIDO: PED-8891.</xInfComp>
+          </infoCompl>
+        </serv>
+        <valores>
+          <vServPrest>
+            <vServ>18000.00</vServ>
+          </vServPrest>
+          <trib>
+            <tribMun>
+              <tribISSQN>1</tribISSQN>
+              <tpRetISSQN>1</tpRetISSQN>
+            </tribMun>
+            <tribFed>
+              <piscofins>
+                <CST>01</CST>
+                <vBCPisCofins>18000.00</vBCPisCofins>
+                <pAliqPis>1.65</pAliqPis>
+                <pAliqCofins>7.60</pAliqCofins>
+                <vPis>297.00</vPis>
+                <vCofins>1368.00</vCofins>
+                <tpRetPisCofins>0</tpRetPisCofins>
+              </piscofins>
+            </tribFed>
+            <totTrib>
+              <pTotTrib>
+                <pTotTribFed>14.25</pTotTribFed>
+                <pTotTribEst>0.00</pTotTribEst>
+                <pTotTribMun>5.00</pTotTribMun>
+              </pTotTrib>
+            </totTrib>
+          </trib>
+        </valores>
+      </infDPS>
+    </DPS>
+  </infNFSe>
+  <Signature xmlns="http://www.w3.org/2000/09/xmldsig#">
+    <SignedInfo>
+      <Reference URI="#NFS33045572410400000000000000000000000000000000000020">
+        <DigestValue>ZGlnZXN0LWRvYy0yMC1wdWJsaWNpZGFkZQ==</DigestValue>
+      </Reference>
+    </SignedInfo>
+    <SignatureValue>U2lnbmF0dXJlVmFsdWVEb2MyMFB1YmxpY2lkYWRlQ29tcGxldGE=</SignatureValue>
+  </Signature>
+</NFSe>

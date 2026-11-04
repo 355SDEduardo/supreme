@@ -1,0 +1,47 @@
+# Ambientes e caches
+.venv/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+.pytest-temp/
+.ruff_cache/
+.uv-cache/
+*.egg-info/
+build/
+dist/
+
+# Ignorar estritamente arquivos .env
+.env
+.env*
+*.env
+**/.env*
+
+# Ignorar arquivos .md
+*.md
+**/*.md
+
+# Ignorar arquivos .txt e .pdf
+*.txt
+**/*.txt
+*.pdf
+**/*.pdf
+
+# Bancos, chaves e certificados
+*.db
+*.db-*
+*.sqlite*
+*.pfx
+*.p12
+*.pem
+*.key
+*.log
+
+# Dados locais e uploads
+data/
+**/outputs/
+**/uploads/
+**/storage/
+audit/notas/*.json
+nfse/data/
+st_difal_web/data/*.json
+portalcontabilidades/portal_contabil.db

@@ -1,0 +1,360 @@
+name: supreme
+x-environment: &environment
+  SUPREME_ENV: ${SUPREME_ENV:-development}
+  SECRET_KEY: ${SECRET_KEY:?Execute scripts/bootstrap.py}
+  MASTER_ENCRYPTION_KEY: ${MASTER_ENCRYPTION_KEY:?Execute scripts/bootstrap.py}
+  STORAGE_ROOT_DIR: /data/storage
+  DB_ROOT_DIR: /data/db
+  DOCUMENT_UPLOADS_DIR: /data/storage/uploads
+  PDF_OUTPUTS_DIR: /data/storage/pdf_outputs
+  TAX_AUDIT_WORKSPACES_DIR: /data/storage/tax_audit
+  NFE_FISCAL_CATALOG_PATH: /data/storage/nfe/fiscal_data.json
+  EVENT_DB_PATH: /events/events.db
+  REDIS_URL: redis://redis:6379/0
+  SVC_SECURITY_IAM_URL: http://svc-security-iam:8001
+  SVC_COMPANIES_URL: http://svc-companies:8002
+  SVC_OBLIGATIONS_URL: http://svc-obligations:8003
+  SVC_DOCUMENTS_URL: http://svc-documents:8004
+  SVC_PDF_TOOLS_URL: http://svc-pdf-tools:8005
+  SVC_NFSE_ENGINE_URL: http://svc-nfse-engine:8006
+  SVC_NFE_DIFAL_URL: http://svc-nfe-difal:8007
+  SVC_FEDERAL_TAX_AUDIT_URL: http://svc-federal-tax-audit:8008
+  SVC_BANK_RECONCILIATION_URL: http://svc-bank-reconciliation:8009
+  SVC_FINANCE_BPO_URL: http://svc-finance-bpo:8010
+  SVC_FISCAL_GOV_URL: http://svc-fiscal-gov:8011
+  SVC_CLIENT_PORTAL_URL: http://svc-client-portal:8012
+  SVC_ANALYTICS_DRE_URL: http://svc-analytics-dre:8013
+  SVC_ACCOUNTING_AI_URL: http://svc-accounting-ai:8014
+services:
+  redis:
+    image: redis:7-alpine
+    command: [redis-server, --appendonly, 'yes']
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      retries: 10
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Configure POSTGRES_PASSWORD no .env}
+      DB_ACCOUNTING_AI_PASSWORD: ${DB_ACCOUNTING_AI_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_ANALYTICS_DRE_PASSWORD: ${DB_ANALYTICS_DRE_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_BANK_RECONCILIATION_PASSWORD: ${DB_BANK_RECONCILIATION_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_CLIENT_PORTAL_PASSWORD: ${DB_CLIENT_PORTAL_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_COMPANIES_PASSWORD: ${DB_COMPANIES_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_DOCUMENTS_PASSWORD: ${DB_DOCUMENTS_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_FINANCE_BPO_PASSWORD: ${DB_FINANCE_BPO_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_FISCAL_GOV_PASSWORD: ${DB_FISCAL_GOV_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_OBLIGATIONS_PASSWORD: ${DB_OBLIGATIONS_PASSWORD:?Execute scripts/bootstrap.py}
+      DB_SECURITY_IAM_PASSWORD: ${DB_SECURITY_IAM_PASSWORD:?Execute scripts/bootstrap.py}
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 5s
+      retries: 10
+  svc-security-iam:
+    build:
+      context: .
+      dockerfile: services/svc-security-iam/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://security_iam:${DB_SECURITY_IAM_PASSWORD}@postgres:5432/security_iam
+    expose: ['8001']
+    volumes:
+      - security-iam-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-companies:
+    build:
+      context: .
+      dockerfile: services/svc-companies/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://companies:${DB_COMPANIES_PASSWORD}@postgres:5432/companies
+    expose: ['8002']
+    volumes:
+      - companies-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-obligations:
+    build:
+      context: .
+      dockerfile: services/svc-obligations/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://obligations:${DB_OBLIGATIONS_PASSWORD}@postgres:5432/obligations
+    expose: ['8003']
+    volumes:
+      - obligations-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-documents:
+    build:
+      context: .
+      dockerfile: services/svc-documents/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://documents:${DB_DOCUMENTS_PASSWORD}@postgres:5432/documents
+    expose: ['8004']
+    volumes:
+      - documents-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-pdf-tools:
+    build:
+      context: .
+      dockerfile: services/svc-pdf-tools/Dockerfile
+    environment:
+      <<: *environment
+    expose: ['8005']
+    volumes:
+      - pdf-tools-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8005/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-nfse-engine:
+    build:
+      context: .
+      dockerfile: services/svc-nfse-engine/Dockerfile
+    environment:
+      <<: *environment
+    expose: ['8006']
+    volumes:
+      - nfse-engine-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8006/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-nfe-difal:
+    build:
+      context: .
+      dockerfile: services/svc-nfe-difal/Dockerfile
+    environment:
+      <<: *environment
+    expose: ['8007']
+    volumes:
+      - nfe-difal-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8007/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-federal-tax-audit:
+    build:
+      context: .
+      dockerfile: services/svc-federal-tax-audit/Dockerfile
+    environment:
+      <<: *environment
+    expose: ['8008']
+    volumes:
+      - federal-tax-audit-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8008/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-bank-reconciliation:
+    build:
+      context: .
+      dockerfile: services/svc-bank-reconciliation/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://bank_reconciliation:${DB_BANK_RECONCILIATION_PASSWORD}@postgres:5432/bank_reconciliation
+    expose: ['8009']
+    volumes:
+      - bank-reconciliation-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8009/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-finance-bpo:
+    build:
+      context: .
+      dockerfile: services/svc-finance-bpo/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://finance_bpo:${DB_FINANCE_BPO_PASSWORD}@postgres:5432/finance_bpo
+    expose: ['8010']
+    volumes:
+      - finance-bpo-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-fiscal-gov:
+    build:
+      context: .
+      dockerfile: services/svc-fiscal-gov/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://fiscal_gov:${DB_FISCAL_GOV_PASSWORD}@postgres:5432/fiscal_gov
+    expose: ['8011']
+    volumes:
+      - fiscal-gov-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8011/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-client-portal:
+    build:
+      context: .
+      dockerfile: services/svc-client-portal/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://client_portal:${DB_CLIENT_PORTAL_PASSWORD}@postgres:5432/client_portal
+    expose: ['8012']
+    volumes:
+      - client-portal-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8012/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-analytics-dre:
+    build:
+      context: .
+      dockerfile: services/svc-analytics-dre/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://analytics_dre:${DB_ANALYTICS_DRE_PASSWORD}@postgres:5432/analytics_dre
+    expose: ['8013']
+    volumes:
+      - analytics-dre-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8013/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  svc-accounting-ai:
+    build:
+      context: .
+      dockerfile: services/svc-accounting-ai/Dockerfile
+    environment:
+      <<: *environment
+      DATABASE_URL: postgresql+psycopg://accounting_ai:${DB_ACCOUNTING_AI_PASSWORD}@postgres:5432/accounting_ai
+    expose: ['8014']
+    volumes:
+      - accounting-ai-data:/data
+      - event-log:/events
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8014/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      <<: *environment
+    ports: ['127.0.0.1:8080:8080']
+    restart: unless-stopped
+volumes:
+  redis-data:
+  postgres-data:
+  event-log:
+  security-iam-data:
+  companies-data:
+  obligations-data:
+  documents-data:
+  pdf-tools-data:
+  nfse-engine-data:
+  nfe-difal-data:
+  federal-tax-audit-data:
+  bank-reconciliation-data:
+  finance-bpo-data:
+  fiscal-gov-data:
+  client-portal-data:
+  analytics-dre-data:
+  accounting-ai-data:

@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ferramentas simples para mesclar, dividir, organizar, girar, reparar e numerar arquivos PDF.">
+    <meta name="theme-color" content="#1E293B">
+    <title>PDF Tools — Organize seus PDFs com facilidade</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/app.js" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
+
+    <svg class="icon-sprite" aria-hidden="true" focusable="false">
+        <symbol id="icon-logo" viewBox="0 0 24 24">
+            <path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5a1.5 1.5 0 0 1 1-1.5Z"/>
+            <path d="M14 3.5V8h4M9 13h6M9 17h4"/>
+        </symbol>
+        <symbol id="icon-merge" viewBox="0 0 24 24">
+            <path d="M7 4v5a3 3 0 0 0 3 3h8M7 20v-5a3 3 0 0 1 3-3"/>
+            <path d="m15 9 3 3-3 3"/>
+        </symbol>
+        <symbol id="icon-split" viewBox="0 0 24 24">
+            <circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/>
+            <path d="m8.2 7.2 10.3 5.3M8.2 16.8l10.3-5.3"/>
+        </symbol>
+        <symbol id="icon-organize" viewBox="0 0 24 24">
+            <path d="M8 4h12M8 12h12M8 20h12M4 4h.01M4 12h.01M4 20h.01"/>
+        </symbol>
+        <symbol id="icon-rotate" viewBox="0 0 24 24">
+            <path d="M20 11a8 8 0 1 0-2.3 6.3M20 4v7h-7"/>
+        </symbol>
+        <symbol id="icon-repair" viewBox="0 0 24 24">
+            <path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5L15 12l-3-3 2.7-2.7Z"/>
+        </symbol>
+        <symbol id="icon-number" viewBox="0 0 24 24">
+            <path d="M10 3 8 21M16 3l-2 18M4 9h16M3 15h16"/>
+        </symbol>
+        <symbol id="icon-upload" viewBox="0 0 24 24">
+            <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5"/>
+        </symbol>
+        <symbol id="icon-file" viewBox="0 0 24 24">
+            <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/>
+            <path d="M14 3v5h4"/>
+        </symbol>
+        <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="m6 15 6-6 6 6"/></symbol>
+        <symbol id="icon-arrow-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7M10 11v6M14 11v6"/>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24">
+            <path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/>
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+        <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+        <symbol id="icon-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></symbol>
+    </svg>
+
+    <header class="app-header">
+        <a class="brand" href="#mesclar" aria-label="PDF Tools — início">
+            <span class="brand-mark" aria-hidden="true">
+                <svg><use href="#icon-logo"></use></svg>
+            </span>
+            <span>
+                <strong>PDF Tools</strong>
+                <small>Seu PDF, do seu jeito.</small>
+            </span>
+        </a>
+
+        <div class="header-actions">
+            <div class="api-status" id="api-status" role="status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="api-status-text">Conectando à API…</span>
+            </div>
+            <a class="docs-link" href="/docs">
+                Documentação
+                <svg aria-hidden="true"><use href="#icon-external"></use></svg>
+            </a>
+        </div>
+    </header>
+
+    <div class="app-shell">
+        <aside class="sidebar" aria-label="Ferramentas PDF">
+            <div class="sidebar-heading">
+                <span>Ferramentas</span>
+                <span class="tool-count">6</span>
+            </div>
+            <nav class="tool-nav" aria-label="Escolha uma ferramenta">
+                <button class="tool-nav-item is-active" type="button" data-tool="mesclar" aria-controls="panel-mesclar" aria-current="page">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-merge"></use></svg></span>
+                    <span><strong>Mesclar PDF</strong><small>Una vários arquivos</small></span>
+                </button>
+                <button class="tool-nav-item" type="button" data-tool="dividir" aria-controls="panel-dividir">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-split"></use></svg></span>
+                    <span><strong>Dividir PDF</strong><small>Separe páginas</small></span>
+                </button>
+                <button class="tool-nav-item" type="button" data-tool="organizar" aria-controls="panel-organizar">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-organize"></use></svg></span>
+                    <span><strong>Organizar PDF</strong><small>Reordene e edite</small></span>
+                </button>
+                <button class="tool-nav-item" type="button" data-tool="girar" aria-controls="panel-girar">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-rotate"></use></svg></span>
+                    <span><strong>Girar PDF</strong><small>Ajuste a orientação</small></span>
+                </button>
+                <button class="tool-nav-item" type="button" data-tool="reparar" aria-controls="panel-reparar">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-repair"></use></svg></span>
+                    <span><strong>Reparar PDF</strong><small>Recupere a estrutura</small></span>
+                </button>
+                <button class="tool-nav-item" type="button" data-tool="numerar" aria-controls="panel-numerar">
+                    <span class="nav-icon"><svg aria-hidden="true"><use href="#icon-number"></use></svg></span>
+                    <span><strong>Numerar páginas</strong><small>Adicione paginação</small></span>
+                </button>
+            </nav>
+
+            <div class="privacy-note">
+                <svg aria-hidden="true"><use href="#icon-info"></use></svg>
+                <div>
+                    <strong>Cuide dos seus arquivos</strong>
+                    <p>Os documentos são enviados ao servidor para processamento. Evite arquivos sensíveis em ambientes compartilhados.</p>
+                </div>
+            </div>
+        </aside>
+
+        <main id="conteudo-principal" class="main-content" tabindex="-1">
+            <section class="hero" aria-labelledby="hero-title">
+                <div>
+                    <p class="eyebrow">FERRAMENTAS PDF EM UM SÓ LUGAR</p>
+                    <h1 id="hero-title">Resolva seus PDFs<br><span>sem complicação.</span></h1>
+                    <p class="hero-copy">Escolha uma ferramenta, envie seus documentos e baixe o resultado. Simples, rápido e direto ao ponto.</p>
+                </div>
+                <ul class="hero-highlights" aria-label="Benefícios">
+                    <li><svg aria-hidden="true"><use href="#icon-check"></use></svg> 6 operações essenciais</li>
+                    <li><svg aria-hidden="true"><use href="#icon-check"></use></svg> Sem cadastro</li>
+                    <li><svg aria-hidden="true"><use href="#icon-check"></use></svg> Download imediato</li>
+                </ul>
+            </section>
+
+            <noscript>
+                <div class="noscript-message">Ative o JavaScript para configurar as ferramentas e baixar os arquivos processados.</div>
+            </noscript>
+
+            <section class="tool-panel" id="panel-mesclar" data-panel="mesclar" aria-labelledby="title-mesclar">
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-merge"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">JUNTAR DOCUMENTOS</p>
+                        <h2 id="title-mesclar">Mesclar arquivos PDF</h2>
+                        <p>Combine dois ou mais documentos na ordem que você escolher.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="merge-form" action="/pdf/merge" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="file-picker" data-dropzone="merge-files">
+                            <input class="file-input" id="merge-files" name="files" type="file" accept=".pdf,application/pdf" multiple required aria-describedby="merge-file-help">
+                            <label for="merge-files">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Arraste seus PDFs aqui</strong>
+                                <span>ou <u>escolha os arquivos</u> no computador</span>
+                                <small id="merge-file-help">Adicione pelo menos 2 arquivos PDF.</small>
+                            </label>
+                        </div>
+
+                        <div class="selected-files" data-file-section="merge-files" hidden>
+                            <div class="selected-files-heading">
+                                <strong>Ordem dos arquivos</strong>
+                                <span data-file-count>0 arquivos</span>
+                            </div>
+                            <p class="field-help">Use as setas para definir a ordem do documento final.</p>
+                            <ol class="file-list" data-file-list="merge-files"></ol>
+                        </div>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-merge"></use></svg>
+                                <span data-button-label>Mesclar e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works" aria-labelledby="merge-how-title">
+                        <p class="aside-label">COMO FUNCIONA</p>
+                        <h3 id="merge-how-title">Um arquivo, na ordem certa</h3>
+                        <ol class="steps-list">
+                            <li><span>1</span><div><strong>Selecione</strong><p>Adicione todos os PDFs que deseja unir.</p></div></li>
+                            <li><span>2</span><div><strong>Organize</strong><p>Ajuste a sequência usando as setas.</p></div></li>
+                            <li><span>3</span><div><strong>Baixe</strong><p>Receba um único documento pronto.</p></div></li>
+                        </ol>
+                        <div class="tip-box"><svg aria-hidden="true"><use href="#icon-info"></use></svg><p>A primeira página do segundo arquivo será inserida após a última página do primeiro.</p></div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="tool-panel" id="panel-dividir" data-panel="dividir" aria-labelledby="title-dividir" hidden>
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-split"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">SEPARAR PÁGINAS</p>
+                        <h2 id="title-dividir">Dividir arquivo PDF</h2>
+                        <p>Extraia um trecho ou crie vários documentos a partir de um PDF.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="split-form" action="/pdf/split" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="file-picker compact" data-dropzone="split-file">
+                            <input class="file-input" id="split-file" name="file" type="file" accept=".pdf,application/pdf" required aria-describedby="split-file-help">
+                            <label for="split-file">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Selecione um arquivo PDF</strong>
+                                <span>Arraste aqui ou <u>procure no computador</u></span>
+                                <small id="split-file-help">Um arquivo por vez.</small>
+                            </label>
+                        </div>
+                        <div class="selected-files" data-file-section="split-file" hidden>
+                            <ol class="file-list" data-file-list="split-file"></ol>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="split-mode">Como deseja dividir?</label>
+                            <select id="split-mode" name="mode">
+                                <option value="every_page">Um PDF para cada página</option>
+                                <option value="range">Extrair um intervalo</option>
+                                <option value="ranges">Criar arquivos por intervalos</option>
+                                <option value="count">Agrupar por quantidade de páginas</option>
+                                <option value="size">Aproximar por tamanho do arquivo</option>
+                            </select>
+                        </div>
+
+                        <div class="conditional-fields" data-mode-fields="split">
+                            <div class="field-row" data-visible-when="range" hidden>
+                                <div class="field-group">
+                                    <label for="split-first-page">Primeira página</label>
+                                    <input id="split-first-page" name="first_page" type="number" min="1" step="1" value="1" required>
+                                </div>
+                                <div class="field-group">
+                                    <label for="split-last-page">Última página</label>
+                                    <input id="split-last-page" name="last_page" type="number" min="1" step="1" placeholder="Ex.: 5" required>
+                                </div>
+                            </div>
+                            <div class="field-group" data-visible-when="ranges" hidden>
+                                <label for="split-ranges">Intervalos</label>
+                                <input id="split-ranges" name="ranges_str" type="text" inputmode="numeric" placeholder="Ex.: 1-3, 4-7, 8-10" required aria-describedby="split-ranges-help">
+                                <small id="split-ranges-help">Separe cada intervalo com vírgula.</small>
+                            </div>
+                            <div class="field-group" data-visible-when="count" hidden>
+                                <label for="split-count">Páginas por arquivo</label>
+                                <input id="split-count" name="pages_per_file" type="number" min="1" step="1" value="2" required>
+                            </div>
+                            <div class="field-group" data-visible-when="size" hidden>
+                                <label for="split-size">Tamanho aproximado por arquivo</label>
+                                <div class="input-suffix"><input id="split-size" name="target_size_mb" type="number" min="0.1" step="0.1" value="5" required><span>MB</span></div>
+                                <small>O resultado é aproximado, pois elementos podem ser compartilhados entre páginas.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-split"></use></svg>
+                                <span data-button-label>Dividir e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works" aria-labelledby="split-how-title">
+                        <p class="aside-label">FORMAS DE DIVIDIR</p>
+                        <h3 id="split-how-title">Escolha o resultado ideal</h3>
+                        <ul class="feature-list">
+                            <li><strong>Página a página</strong><span>Gera um ZIP quando houver vários arquivos.</span></li>
+                            <li><strong>Por intervalo</strong><span>Extrai apenas as páginas que você precisa.</span></li>
+                            <li><strong>Por grupos</strong><span>Organiza o documento em blocos regulares.</span></li>
+                        </ul>
+                        <div class="tip-box"><svg aria-hidden="true"><use href="#icon-info"></use></svg><p>A contagem de páginas começa em 1, como aparece no leitor de PDF.</p></div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="tool-panel" id="panel-organizar" data-panel="organizar" aria-labelledby="title-organizar" hidden>
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-organize"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">EDITAR E REORDENAR</p>
+                        <h2 id="title-organizar">Organizar páginas do PDF</h2>
+                        <p>Reordene, exclua, duplique ou combine páginas em uma sequência personalizada.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="organize-form" action="/pdf/organize" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="field-group">
+                            <label for="organize-mode">O que deseja fazer?</label>
+                            <select id="organize-mode" name="mode">
+                                <option value="reorder">Reordenar páginas</option>
+                                <option value="delete">Excluir páginas</option>
+                                <option value="duplicate">Duplicar uma página</option>
+                                <option value="reverse">Inverter a ordem completa</option>
+                                <option value="custom">Montar uma sequência personalizada</option>
+                            </select>
+                        </div>
+
+                        <div class="file-picker compact" data-dropzone="organize-files">
+                            <input class="file-input" id="organize-files" name="files" type="file" accept=".pdf,application/pdf" required aria-describedby="organize-file-help">
+                            <label for="organize-files">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Selecione seu PDF</strong>
+                                <span>Arraste aqui ou <u>procure no computador</u></span>
+                                <small id="organize-file-help">No modo personalizado, você pode usar vários arquivos.</small>
+                            </label>
+                        </div>
+                        <div class="selected-files" data-file-section="organize-files" hidden>
+                            <ol class="file-list" data-file-list="organize-files"></ol>
+                        </div>
+
+                        <div class="conditional-fields" data-mode-fields="organize">
+                            <div class="field-group" data-visible-when="reorder">
+                                <label for="organize-order">Nova ordem das páginas</label>
+                                <input id="organize-order" name="page_order_str" type="text" inputmode="numeric" placeholder="Ex.: 3, 1, 2, 5, 4" required>
+                                <small>Informe todas as páginas na ordem em que devem aparecer.</small>
+                            </div>
+                            <div class="field-group" data-visible-when="delete" hidden>
+                                <label for="organize-delete">Páginas para excluir</label>
+                                <input id="organize-delete" name="pages_to_delete_str" type="text" inputmode="numeric" placeholder="Ex.: 2, 4" required>
+                                <small>Não é possível excluir todas as páginas.</small>
+                            </div>
+                            <div class="field-row" data-visible-when="duplicate" hidden>
+                                <div class="field-group">
+                                    <label for="organize-page">Página</label>
+                                    <input id="organize-page" name="duplicate_page_num" type="number" min="1" step="1" value="1" required>
+                                </div>
+                                <div class="field-group">
+                                    <label for="organize-copies">Número de cópias</label>
+                                    <input id="organize-copies" name="copies" type="number" min="1" step="1" value="1" required>
+                                </div>
+                            </div>
+                            <div class="inline-note" data-visible-when="reverse" hidden>
+                                <svg aria-hidden="true"><use href="#icon-info"></use></svg>
+                                <p>A última página passará a ser a primeira, e assim sucessivamente.</p>
+                            </div>
+                            <div class="custom-builder" data-visible-when="custom" hidden>
+                                <div class="custom-builder-heading">
+                                    <div>
+                                        <strong>Sequência final</strong>
+                                        <p>Adicione as páginas na ordem desejada.</p>
+                                    </div>
+                                    <button class="button button-secondary button-small" id="add-page-item" type="button">
+                                        <svg aria-hidden="true"><use href="#icon-plus"></use></svg> Adicionar página
+                                    </button>
+                                </div>
+                                <ol class="page-item-list" id="custom-page-list"></ol>
+                                <p class="empty-builder" id="custom-page-empty">Selecione os arquivos e adicione a primeira página da sequência.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-organize"></use></svg>
+                                <span data-button-label>Organizar e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works" aria-labelledby="organize-how-title">
+                        <p class="aside-label">CONTROLE DE PÁGINAS</p>
+                        <h3 id="organize-how-title">Do ajuste rápido ao personalizado</h3>
+                        <ul class="feature-list">
+                            <li><strong>Reordene</strong><span>Defina a sequência com números separados por vírgula.</span></li>
+                            <li><strong>Edite</strong><span>Remova ou duplique páginas específicas.</span></li>
+                            <li><strong>Combine</strong><span>Monte um PDF usando páginas de vários arquivos.</span></li>
+                        </ul>
+                        <div class="tip-box"><svg aria-hidden="true"><use href="#icon-info"></use></svg><p>No modo personalizado, cada item pode receber uma rotação individual.</p></div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="tool-panel" id="panel-girar" data-panel="girar" aria-labelledby="title-girar" hidden>
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-rotate"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">AJUSTAR ORIENTAÇÃO</p>
+                        <h2 id="title-girar">Girar páginas do PDF</h2>
+                        <p>Corrija a orientação de todas as páginas ou apenas das selecionadas.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="rotate-form" action="/pdf/rotate" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="file-picker compact" data-dropzone="rotate-file">
+                            <input class="file-input" id="rotate-file" name="file" type="file" accept=".pdf,application/pdf" required>
+                            <label for="rotate-file">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Selecione um arquivo PDF</strong>
+                                <span>Arraste aqui ou <u>procure no computador</u></span>
+                            </label>
+                        </div>
+                        <div class="selected-files" data-file-section="rotate-file" hidden><ol class="file-list" data-file-list="rotate-file"></ol></div>
+
+                        <fieldset class="choice-fieldset">
+                            <legend>Ângulo de rotação</legend>
+                            <div class="choice-cards rotation-choices">
+                                <label><input type="radio" name="angle" value="-90"><span><strong>↶</strong> 90° à esquerda</span></label>
+                                <label><input type="radio" name="angle" value="90" checked><span><strong>↷</strong> 90° à direita</span></label>
+                                <label><input type="radio" name="angle" value="180"><span><strong>↻</strong> 180°</span></label>
+                            </div>
+                        </fieldset>
+
+                        <div class="field-group">
+                            <label for="rotate-pages">Páginas a girar <span class="optional">Opcional</span></label>
+                            <input id="rotate-pages" name="pages_str" type="text" inputmode="numeric" placeholder="Todas as páginas">
+                            <small>Use números e intervalos, por exemplo: 1-4, 7, 10.</small>
+                        </div>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-rotate"></use></svg>
+                                <span data-button-label>Girar e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works" aria-labelledby="rotate-how-title">
+                        <p class="aside-label">ORIENTAÇÃO</p>
+                        <h3 id="rotate-how-title">Ajuste exatamente o necessário</h3>
+                        <div class="rotation-visual" aria-hidden="true">
+                            <span class="paper paper-back"></span><span class="paper paper-front">PDF</span><span class="rotation-arrow">↷</span>
+                        </div>
+                        <p class="aside-copy">Deixe o campo de páginas vazio para aplicar a rotação ao documento inteiro.</p>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="tool-panel" id="panel-reparar" data-panel="reparar" aria-labelledby="title-reparar" hidden>
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-repair"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">RECUPERAR ESTRUTURA</p>
+                        <h2 id="title-reparar">Reparar arquivo PDF</h2>
+                        <p>Tente reconstruir um documento com erros de estrutura ou leitura.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="repair-form" action="/pdf/repair" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="file-picker compact" data-dropzone="repair-file">
+                            <input class="file-input" id="repair-file" name="file" type="file" accept=".pdf,application/pdf" required>
+                            <label for="repair-file">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Selecione o PDF com problema</strong>
+                                <span>Arraste aqui ou <u>procure no computador</u></span>
+                            </label>
+                        </div>
+                        <div class="selected-files" data-file-section="repair-file" hidden><ol class="file-list" data-file-list="repair-file"></ol></div>
+
+                        <div class="field-group">
+                            <label for="repair-password">Senha do documento <span class="optional">Opcional</span></label>
+                            <div class="password-field">
+                                <input id="repair-password" name="password" type="password" autocomplete="off" aria-describedby="repair-password-help">
+                                <button type="button" data-toggle-password="repair-password" aria-label="Mostrar senha">Mostrar</button>
+                            </div>
+                            <small id="repair-password-help">Informe apenas se o arquivo estiver protegido e você tiver autorização para abri-lo.</small>
+                        </div>
+
+                        <div class="inline-note warning-note">
+                            <svg aria-hidden="true"><use href="#icon-info"></use></svg>
+                            <p>A reparação tenta reconstruir a estrutura, mas não consegue recuperar conteúdo que já foi perdido.</p>
+                        </div>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-repair"></use></svg>
+                                <span data-button-label>Reparar e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works" aria-labelledby="repair-how-title">
+                        <p class="aside-label">PROCESSO EM CAMADAS</p>
+                        <h3 id="repair-how-title">Uma nova tentativa de leitura</h3>
+                        <ol class="steps-list">
+                            <li><span>1</span><div><strong>Reconstrução</strong><p>O arquivo é aberto e gravado novamente.</p></div></li>
+                            <li><span>2</span><div><strong>Normalização</strong><p>A estrutura interna é organizada.</p></div></li>
+                            <li><span>3</span><div><strong>Validação</strong><p>O resultado é verificado quando possível.</p></div></li>
+                        </ol>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="tool-panel" id="panel-numerar" data-panel="numerar" aria-labelledby="title-numerar" hidden>
+                <div class="panel-heading">
+                    <span class="panel-icon"><svg aria-hidden="true"><use href="#icon-number"></use></svg></span>
+                    <div>
+                        <p class="panel-kicker">ADICIONAR PAGINAÇÃO</p>
+                        <h2 id="title-numerar">Numerar páginas do PDF</h2>
+                        <p>Escolha posição, formato e estilo para identificar cada página.</p>
+                    </div>
+                </div>
+
+                <div class="workspace-grid">
+                    <form class="tool-form" id="number-form" action="/pdf/number" method="post" enctype="multipart/form-data" novalidate>
+                        <div class="file-picker compact" data-dropzone="number-file">
+                            <input class="file-input" id="number-file" name="file" type="file" accept=".pdf,application/pdf" required>
+                            <label for="number-file">
+                                <span class="upload-icon"><svg aria-hidden="true"><use href="#icon-upload"></use></svg></span>
+                                <strong>Selecione um arquivo PDF</strong>
+                                <span>Arraste aqui ou <u>procure no computador</u></span>
+                            </label>
+                        </div>
+                        <div class="selected-files" data-file-section="number-file" hidden><ol class="file-list" data-file-list="number-file"></ol></div>
+
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label for="number-position">Posição</label>
+                                <select id="number-position" name="position">
+                                    <option value="bottom-left">Inferior esquerda</option>
+                                    <option value="bottom-center" selected>Inferior central</option>
+                                    <option value="bottom-right">Inferior direita</option>
+                                    <option value="top-left">Superior esquerda</option>
+                                    <option value="top-center">Superior central</option>
+                                    <option value="top-right">Superior direita</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label for="number-first">Começar em</label>
+                                <input id="number-first" name="first_number" type="number" step="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="number-template">Formato do texto</label>
+                            <input id="number-template" name="template" type="text" value="Página {current} de {total}" required aria-describedby="number-template-help">
+                            <small id="number-template-help">Use <code>{current}</code> para o número atual, <code>{total}</code> para o último número e <code>{document_total}</code> para o total de páginas.</small>
+                        </div>
+
+                        <details class="advanced-options">
+                            <summary>Opções de aparência</summary>
+                            <div class="advanced-options-content">
+                                <div class="field-row three-columns">
+                                    <div class="field-group">
+                                        <label for="number-font">Fonte</label>
+                                        <select id="number-font" name="font_name">
+                                            <option value="Helvetica">Helvetica</option>
+                                            <option value="Times-Roman">Times</option>
+                                            <option value="Courier">Courier</option>
+                                        </select>
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="number-font-size">Tamanho</label>
+                                        <div class="input-suffix"><input id="number-font-size" name="font_size" type="number" min="6" max="72" step="1" value="10" required><span>pt</span></div>
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="number-margin">Margem</label>
+                                        <div class="input-suffix"><input id="number-margin" name="margin" type="number" min="0" step="1" value="24" required><span>pt</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <div class="form-status" data-form-status role="status" aria-live="polite" tabindex="-1" hidden></div>
+                        <div class="form-actions">
+                            <button class="button button-primary" type="submit">
+                                <svg aria-hidden="true"><use href="#icon-number"></use></svg>
+                                <span data-button-label>Numerar e baixar</span>
+                                <span class="button-spinner" aria-hidden="true"></span>
+                            </button>
+                            <button class="button button-ghost" type="reset">Limpar</button>
+                        </div>
+                    </form>
+
+                    <aside class="how-it-works number-preview-card" aria-labelledby="number-preview-title">
+                        <p class="aside-label">PRÉVIA DE POSIÇÃO</p>
+                        <h3 id="number-preview-title">Visualize antes de aplicar</h3>
+                        <div class="page-preview" aria-label="Prévia aproximada da posição da numeração">
+                            <span class="preview-line line-one"></span><span class="preview-line line-two"></span><span class="preview-line line-three"></span>
+                            <span class="page-number-preview bottom-center" id="number-preview-text">Página 1 de 3</span>
+                        </div>
+                        <p class="aside-copy">A prévia indica a posição. O tamanho final acompanha as configurações em pontos.</p>
+                    </aside>
+                </div>
+            </section>
+
+            <footer class="app-footer">
+                <p>PDF Tools <span aria-hidden="true">·</span> Processamento simples e direto.</p>
+                <a href="/docs">API e documentação</a>
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
