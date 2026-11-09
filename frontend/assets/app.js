@@ -86,6 +86,10 @@ const VIEW_METADATA = {
     title: 'Conciliação Bancária Automática (OFX)',
     subtitle: 'Importação OFX com deduplicação FITID, motor de matching e verificação de saldo.',
   },
+  pluggy: {
+    title: 'Integração Pluggy — Open Finance',
+    subtitle: 'Configuração da API e disponibilidade de bancos por empresa.',
+  },
   analytics: {
     title: 'Fluxo de Caixa, DRE Dinâmica & KPIs',
     subtitle: 'Demonstração do Resultado com Análise Vertical/Horizontal e projeção de liquidez.',
@@ -194,6 +198,7 @@ function closeModal(modalId) {
 // SESSÃO, LOGIN E CONTEXTO GLOBAL
 // ============================================================================
 function showLoginScreen(message = '') {
+  window.PluggyConfiguration?.reset();
   document.getElementById('app-shell')?.classList.add('hidden');
   document.getElementById('login-screen')?.classList.remove('hidden');
   const fb = document.getElementById('login-feedback');
@@ -279,6 +284,7 @@ async function handleLoginSubmit(event) {
 }
 
 async function handleLogout() {
+  window.PluggyConfiguration?.reset();
   await ApiClient.resetNfseWorkspace();
   resetNfseView();
   try {
@@ -324,6 +330,7 @@ async function initializeCompanySelector() {
 
 async function handleCompanySwitch(targetCompanyId, reloadView = true) {
   if (!targetCompanyId) return;
+  window.PluggyConfiguration?.reset();
   try {
     await ApiClient.resetNfseWorkspace();
     resetNfseView();
@@ -349,6 +356,7 @@ async function handleCompanySwitch(targetCompanyId, reloadView = true) {
 // ============================================================================
 async function navigateTo(viewId) {
   const normalized = viewId === 'overview' ? 'cockpit' : (viewId === 'finance' ? 'bills' : viewId);
+  if (AppState.activeView === 'pluggy' && normalized !== 'pluggy') window.PluggyConfiguration?.reset();
   AppState.activeView = normalized;
 
   document.querySelectorAll('#module-nav .nav-item').forEach(btn => {
@@ -384,6 +392,9 @@ async function navigateTo(viewId) {
       break;
     case 'reconciliation':
       await loadReconciliationViewData();
+      break;
+    case 'pluggy':
+      await window.PluggyConfiguration?.refresh();
       break;
     case 'analytics':
       await loadAnalyticsViewData();

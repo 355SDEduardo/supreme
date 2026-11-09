@@ -88,6 +88,38 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+.pluggy-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+.pluggy-summary > div { padding: 18px; }
+.pluggy-summary dt, .pluggy-help { color: var(--muted); font-size: 0.86rem; }
+.pluggy-summary dd { margin: 8px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.pluggy-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.pluggy-side { display: grid; gap: 20px; min-width: 0; }
+#pluggy-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.pluggy-help { line-height: 1.6; margin: 0 0 18px; }
+.pluggy-help a { color: var(--accent-strong); text-decoration: underline; }
+#pluggy-form label { margin-bottom: 6px; }
+#pluggy-form .pluggy-checkbox { display: flex; align-items: center; gap: 10px; margin-top: 20px; }
+#pluggy-sandbox { width: 18px; height: 18px; flex: 0 0 auto; }
+.pluggy-actions { margin-top: 22px; flex-wrap: wrap; }
+.pluggy-remove { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border); }
+.pluggy-remove .pluggy-help { margin: 12px 0 0; }
+.pluggy-steps { padding-left: 22px; margin: 0 0 20px; }
+.pluggy-steps li { margin-bottom: 14px; }
+.pluggy-connectors { list-style: none; margin: 14px 0 0; padding: 0; max-height: 360px; overflow-y: auto; }
+.pluggy-connectors li { display: grid; gap: 4px; padding: 12px 0; border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.pluggy-connectors span { font-size: 0.82rem; color: var(--muted); }
+#pluggy-connectors-summary { margin-top: 14px; }
+#view-pluggy button { white-space: normal; }
+#view-pluggy :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+#view-pluggy .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 1100px) { .pluggy-layout { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .pluggy-summary { grid-template-columns: minmax(0, 1fr); } }
+
 .hidden {
   display: none !important;
 }

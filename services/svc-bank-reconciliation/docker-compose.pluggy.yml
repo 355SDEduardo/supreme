@@ -1,0 +1,7 @@
+# Use junto ao docker-compose.yml da raiz; configura apenas este serviço.
+services:
+  svc-bank-reconciliation:
+    environment:
+      PLUGGY_CLIENT_ID: ${PLUGGY_CLIENT_ID:?Configure PLUGGY_CLIENT_ID}
+      PLUGGY_CLIENT_SECRET: ${PLUGGY_CLIENT_SECRET:?Configure PLUGGY_CLIENT_SECRET}
+      PLUGGY_ALLOW_SANDBOX: ${PLUGGY_ALLOW_SANDBOX:-false}

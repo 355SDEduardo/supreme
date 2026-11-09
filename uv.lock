@@ -1543,6 +1543,7 @@ name = "svc-bank-reconciliation"
 version = "1.0.0"
 source = { editable = "services/svc-bank-reconciliation" }
 dependencies = [
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pydantic" },
@@ -1554,6 +1555,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cryptography", specifier = ">=43" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.27,<1" },
     { name = "pydantic", specifier = ">=2.8,<3" },

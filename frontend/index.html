@@ -80,6 +80,9 @@
         <button type="button" class="nav-item" data-view="reconciliation">
           <span>Conciliação Bancária (OFX)</span>
         </button>
+        <button type="button" class="nav-item" data-view="pluggy">
+          <span>Integração Pluggy</span>
+        </button>
         <button type="button" class="nav-item" data-view="analytics">
           <span>DRE, Fluxo de Caixa &amp; KPIs</span>
         </button>
@@ -534,6 +537,81 @@
         <!-- ==================================================================
              VIEW 06: CONCILIAÇÃO BANCÁRIA AUTOMÁTICA — OFX (svc-bank-reconciliation)
              ================================================================== -->
+        <section id="view-pluggy" class="view-section" aria-labelledby="pluggy-heading">
+          <div class="section-header-bar">
+            <div class="section-title-group">
+              <h3 id="pluggy-heading">Configure a API Pluggy</h3>
+              <p>Gerencie as credenciais de Open Finance da empresa selecionada.</p>
+            </div>
+            <button id="pluggy-reload" type="button" class="btn btn-secondary">Recarregar configuração</button>
+          </div>
+
+          <div id="pluggy-feedback" class="alert" role="status" aria-live="polite">Selecione uma empresa para configurar a integração.</div>
+          <dl class="pluggy-summary">
+            <div class="card"><dt>Empresa selecionada</dt><dd id="pluggy-company">—</dd></div>
+            <div class="card"><dt>Configuração em uso</dt><dd id="pluggy-source">Não consultada</dd></div>
+            <div class="card"><dt>Última alteração nesta empresa</dt><dd id="pluggy-updated">—</dd></div>
+          </dl>
+
+          <div class="pluggy-layout">
+            <div class="card">
+              <div class="card-header"><h4 class="card-title">Credenciais da aplicação</h4></div>
+              <div class="card-body">
+                <p class="pluggy-help">Obtenha o Client ID e o Client Secret no <a href="https://dashboard.pluggy.ai" target="_blank" rel="noopener noreferrer">Dashboard Pluggy</a>. Use as credenciais da aplicação, nunca a senha do banco.</p>
+                <form id="pluggy-form" autocomplete="off">
+                  <fieldset id="pluggy-fields" disabled>
+                    <legend class="sr-only">Configuração da API Pluggy</legend>
+                    <label for="pluggy-client-id">Client ID
+                      <input id="pluggy-client-id" name="client_id" type="text" maxlength="512" autocomplete="off" spellcheck="false" autocapitalize="none" aria-describedby="pluggy-id-help">
+                    </label>
+                    <p id="pluggy-id-help" class="pluggy-help">Informe o identificador da aplicação.</p>
+                    <label for="pluggy-client-secret">Client Secret
+                      <input id="pluggy-client-secret" name="client_secret" type="password" maxlength="4096" autocomplete="new-password" spellcheck="false" aria-describedby="pluggy-secret-help">
+                    </label>
+                    <p id="pluggy-secret-help" class="pluggy-help">O segredo será criptografado no servidor e não será exibido novamente.</p>
+                    <label class="pluggy-checkbox" for="pluggy-sandbox">
+                      <input id="pluggy-sandbox" type="checkbox" aria-describedby="pluggy-sandbox-help">
+                      Permitir bancos de teste (sandbox)
+                    </label>
+                    <p id="pluggy-sandbox-help" class="pluggy-help">Use somente para testes. Sandbox não está disponível em produção.</p>
+                    <div class="action-group pluggy-actions">
+                      <button id="pluggy-save" class="btn btn-primary" type="submit">Validar e salvar</button>
+                      <button id="pluggy-test" class="btn btn-secondary" type="button">Testar configuração salva</button>
+                    </div>
+                  </fieldset>
+                </form>
+                <div class="pluggy-remove">
+                  <button id="pluggy-remove" class="btn btn-secondary" type="button" disabled>Remover configuração da empresa</button>
+                  <p class="pluggy-help">Após remover, a configuração do servidor será usada, se disponível. Bancos conectados precisam ser desconectados antes da remoção.</p>
+                </div>
+              </div>
+            </div>
+            <div class="pluggy-side">
+              <div class="card">
+                <div class="card-header"><h4 class="card-title">Como a configuração funciona</h4></div>
+                <div class="card-body">
+                  <ol class="pluggy-steps">
+                    <li><strong>Selecione a empresa.</strong> As credenciais salvas valem apenas para ela.</li>
+                    <li><strong>Valide e salve.</strong> A autenticação é verificada com a Pluggy antes de substituir as credenciais atuais.</li>
+                    <li><strong>Consulte os bancos.</strong> Verifique os conectores disponíveis para contas e transações.</li>
+                  </ol>
+                  <p class="pluggy-help">Salvar as credenciais não conecta contas nem importa extratos. A conexão bancária exige consentimento pelo Pluggy Connect.</p>
+                  <p class="pluggy-help">Somente administradores e supervisores podem gerenciar esta configuração.</p>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><h4 class="card-title">Bancos disponíveis</h4></div>
+                <div class="card-body">
+                  <p class="pluggy-help">Conectores Open Finance brasileiros compatíveis com contas e transações.</p>
+                  <button id="pluggy-connectors-load" class="btn btn-secondary" type="button" disabled>Consultar bancos</button>
+                  <p id="pluggy-connectors-summary" class="pluggy-help" aria-live="polite">Salve ou teste a configuração para consultar a disponibilidade.</p>
+                  <ul id="pluggy-connectors" class="pluggy-connectors" aria-label="Bancos disponíveis"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section id="view-reconciliation" class="view-section">
           <div class="section-header-bar">
             <div class="section-title-group">
@@ -2392,6 +2470,7 @@ VALOR TOTAL DO SERVIÇO: R$ 14.500,00</textarea>
   <script src="/assets/retencoes.js"></script>
   <script src="/assets/charts.js"></script>
   <script src="/assets/api.js"></script>
+  <script src="/assets/pluggy.js"></script>
   <script src="/assets/app.js"></script>
 </body>
 </html>
