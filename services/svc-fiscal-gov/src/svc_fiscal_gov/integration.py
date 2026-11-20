@@ -18,6 +18,7 @@ integration_router = APIRouter(prefix='/fiscal')
 
 @integration_router.post('/transmissions/enqueue', response_model=FiscalTransmissionResponse)
 def enqueue(payload: FiscalTransmissionCreate, db: Session = Depends(get_db)):
+    from supreme_common.object_storage import ObjectStorage, enabled
     if payload.system_target not in {'esocial','efd_reinf','dctfweb','nfse_nacional','integra_contador'}:
         raise HTTPException(422, 'Sistema fiscal inválido.')
     if payload.environment not in {'production','test_restricted'}:
@@ -28,12 +29,16 @@ def enqueue(payload: FiscalTransmissionCreate, db: Session = Depends(get_db)):
         raise HTTPException(422, str(exc)) from exc
     row = db.query(FiscalTransmission).filter(FiscalTransmission.idempotency_key == payload.idempotency_key).first()
     if row:
-        if row.xml_sent_payload != payload.xml_payload:
+        stored = row.xml_sent_payload
+        if stored.startswith('supabase://'):
+            stored = ObjectStorage('documents-custody').get(stored).decode('utf-8')
+        if stored != payload.xml_payload:
             raise HTTPException(409, 'Chave idempotente já usada com outro conteúdo.')
         return row
+    content = ObjectStorage('documents-custody').put(payload.xml_payload.encode('utf-8')) if enabled() else payload.xml_payload
     row = FiscalTransmission(company_id=payload.company_id, system_target=payload.system_target,
         event_type=payload.event_type, competence=payload.competence, environment=payload.environment,
-        idempotency_key=payload.idempotency_key, xml_sent_payload=payload.xml_payload, status='queued', attempts=0)
+        idempotency_key=payload.idempotency_key, xml_sent_payload=content, status='queued', attempts=0)
     db.add(row)
     db.commit()
     return row

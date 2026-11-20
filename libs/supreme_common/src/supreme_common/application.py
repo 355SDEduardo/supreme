@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 from importlib import import_module
 from fastapi import Depends, FastAPI
 from .auth_context import AuthMiddleware, enforce_request_context, secret_key
-from .database import configure_database, db_dependency
+from .database import configure_database, db_dependency, initialize_database
 from .uploads import RequestLimitMiddleware
 
 def domain_app(name, base, routers, *, database_url=None, database_engine=None):
@@ -17,7 +19,9 @@ def domain_app(name, base, routers, *, database_url=None, database_engine=None):
                 raise
             events = None
         configure_database(app, base, database_url, database_engine)
-        base.metadata.create_all(app.state.engine)
+        initialize_database(app, base)
+        from .postgres_journal import journal_url
+        journal_url()
         import asyncio
         from .events import outbox_loop
         app.state.outbox_task = asyncio.create_task(outbox_loop(app))

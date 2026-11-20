@@ -448,6 +448,50 @@
              VIEW 05: BPO FINANCEIRO — CONTAS A PAGAR E RECEBER (svc-finance-bpo)
              ================================================================== -->
         <section id="view-bills" class="view-section">
+          <div class="card" id="bpo-statements-panel">
+            <div class="card-header"><div>
+              <h3 class="card-title">Transações de extratos bancários</h3>
+              <p class="card-subtitle">Combine PDF, CSV, XLSX e OFX da mesma conta. A extração valida data, valor e entrada/saída; a IA compara as descrições antes do registro.</p>
+            </div></div>
+            <div class="card-body">
+              <form id="bpo-statement-form">
+                <div class="form-grid">
+                  <div class="form-group"><label for="bpo-bank">Banco</label><select id="bpo-bank" name="bank_code" required><option value="033">Santander (033)</option><option value="756">Sicoob (756)</option></select></div>
+                  <div class="form-group"><label for="bpo-agency">Agência / cooperativa</label><input id="bpo-agency" name="agency" required maxlength="30" inputmode="numeric"></div>
+                  <div class="form-group"><label for="bpo-account">Conta com dígito</label><input id="bpo-account" name="account" required maxlength="30" inputmode="numeric"></div>
+                  <div class="form-group"><label for="bpo-date-from">Data inicial dos documentos</label><input id="bpo-date-from" name="date_from" type="date" required></div>
+                  <div class="form-group"><label for="bpo-date-to">Data final dos documentos</label><input id="bpo-date-to" name="date_to" type="date" required></div>
+                  <div class="form-group"><label for="bpo-files">Arquivos complementares</label><input id="bpo-files" name="files" type="file" accept=".pdf,.csv,.xlsx,.ofx" multiple required aria-describedby="bpo-file-help"></div>
+                </div>
+                <p id="bpo-file-help">Até 12 arquivos, 10 MiB por arquivo. Use PDF digital. Saldos não viram transações. Inclua no período todas as datas efetivamente presentes, mesmo quando diferem do mês no nome do arquivo.</p>
+                <label><input type="checkbox" name="confirm_unidentified_sources" value="true" required> Confirmo que os arquivos sem identificação bancária completa pertencem à conta informada.</label>
+                <div class="action-group"><button type="submit" class="btn btn-primary" id="bpo-upload">Extrair e cruzar fontes</button></div>
+              </form>
+              <p id="bpo-statement-status" role="status" aria-live="polite">Selecione uma empresa para importar extratos.</p>
+              <div class="action-group">
+                <label for="bpo-imports">Retomar importação</label><select id="bpo-imports"><option value="">Escolha uma importação</option></select>
+                <button type="button" class="btn btn-secondary" id="bpo-reload">Atualizar lista</button>
+                <button type="button" class="btn btn-secondary" id="bpo-analyze" disabled>Analisar descrições com IA</button>
+                <button type="button" class="btn btn-secondary" id="bpo-stop" disabled>Interromper análise</button>
+                <button type="button" class="btn btn-primary" id="bpo-register" disabled>Registrar transações</button>
+              </div>
+              <p>Ao analisar, somente as descrições candidatas são enviadas à API de IA configurada. O texto escolhido permanece igual ao documento original.</p>
+              <ul id="bpo-source-summary"></ul>
+              <div class="table-wrapper"><table class="data-table">
+                <caption>Prévia das transações e fontes utilizadas</caption>
+                <thead><tr><th scope="col">Data</th><th scope="col">Descrição</th><th scope="col">Tipo</th><th scope="col" class="text-right">Valor</th><th scope="col">Rastreabilidade</th></tr></thead>
+                <tbody id="bpo-preview-body"></tbody>
+              </table></div>
+              <div class="action-group"><button type="button" class="btn btn-secondary" id="bpo-preview-prev" disabled>Anterior</button><span id="bpo-preview-page"></span><button type="button" class="btn btn-secondary" id="bpo-preview-next" disabled>Próxima</button></div>
+              <h4>Transações registradas nesta empresa</h4>
+              <p>Os registros de extrato são movimentos bancários; não criam títulos nem baixas financeiras automaticamente.</p>
+              <div class="table-wrapper"><table class="data-table">
+                <thead><tr><th scope="col">Conta</th><th scope="col">Data</th><th scope="col">Descrição</th><th scope="col">Tipo</th><th scope="col" class="text-right">Valor</th></tr></thead>
+                <tbody id="bpo-ledger-body"></tbody>
+              </table></div>
+              <div class="action-group"><button type="button" class="btn btn-secondary" id="bpo-ledger-prev" disabled>Anterior</button><span id="bpo-ledger-page"></span><button type="button" class="btn btn-secondary" id="bpo-ledger-next" disabled>Próxima</button></div>
+            </div>
+          </div>
           <div class="section-header-bar">
             <div class="section-title-group">
               <h3>BPO Financeiro — Contas a Pagar, Receber &amp; Aging List</h3>
@@ -2470,6 +2514,7 @@ VALOR TOTAL DO SERVIÇO: R$ 14.500,00</textarea>
   <script src="/assets/retencoes.js"></script>
   <script src="/assets/charts.js"></script>
   <script src="/assets/api.js"></script>
+  <script src="/assets/bpo-statements.js"></script>
   <script src="/assets/pluggy.js"></script>
   <script src="/assets/app.js"></script>
 </body>

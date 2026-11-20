@@ -38,6 +38,7 @@ dist/
 
 # Dados locais e uploads
 data/
+amostra extratos/
 **/outputs/
 **/uploads/
 **/storage/

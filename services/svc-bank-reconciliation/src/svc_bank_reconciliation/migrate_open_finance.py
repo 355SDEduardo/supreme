@@ -39,6 +39,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Verifica as tabelas sem alterar o banco.")
     args = parser.parse_args()
+    if os.getenv("SUPREME_DATABASE_MODE") == "supabase" or os.getenv("SUPABASE_DB_URL") or os.getenv("SUPABASE_RECONCILIATION_DB_URL"):
+        parser.error("No Supabase, aplique as migrações SQL em supabase/migrations; este comando é local.")
     path = Path(os.getenv("DB_ROOT_DIR", "./data/db")) / "svc-bank-reconciliation.db"
     url = os.getenv("DATABASE_URL")
     if not url:

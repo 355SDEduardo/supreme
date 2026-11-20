@@ -1,4 +1,6 @@
 """Generate local secrets and create an explicit initial IAM administrator."""
+from __future__ import annotations
+
 import argparse
 import getpass
 import os
@@ -39,12 +41,12 @@ def main():
     from svc_security_iam.app import create_app
     from svc_security_iam.auth import Identity
     from svc_security_iam.database import Base
-    from supreme_common.database import configure_database
+    from supreme_common.database import configure_database, initialize_database
     if not SAFE_ID.fullmatch(args.organization):
         parser.error('Use organização alfanumérica, com hífen ou sublinhado.')
     app = create_app()
     configure_database(app, Base)
-    Base.metadata.create_all(app.state.engine)
+    initialize_database(app, Base)
     with app.state.sessions() as db:
         if db.query(Identity).filter(Identity.email == args.email.lower()).first():
             parser.error('Usuário já existe; nenhuma credencial foi alterada.')

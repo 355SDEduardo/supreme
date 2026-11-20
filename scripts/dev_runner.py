@@ -1,4 +1,6 @@
 """Run isolated services; stop the entire process group on failure or Ctrl+C."""
+from __future__ import annotations
+
 import argparse
 import os
 from pathlib import Path
@@ -8,6 +10,32 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def service_environment(slug: str, environment: dict[str, str]) -> dict[str, str]:
+    from supreme_common.supabase_database import SERVICE_SCHEMAS
+    result = dict(environment)
+    # This runner launches all domains; a process-wide URL would cross boundaries.
+    result.pop('DATABASE_URL', None)
+    schema = SERVICE_SCHEMAS.get('svc-' + slug) or {
+        'nfse-engine': 'nfse', 'nfe-difal': 'nfe', 'federal-tax-audit': 'tax_audit'
+    }.get(slug)
+    own_key = f'SUPABASE_{schema.upper()}_DB_URL' if schema else None
+    if slug != 'gateway' and not result.get('SUPABASE_EVENTS_DB_URL') and result.get('SUPABASE_DB_URL'):
+        result['SUPABASE_EVENTS_DB_URL'] = result['SUPABASE_DB_URL']
+    for key in list(result):
+        if key.startswith('SUPABASE_') and key.endswith('_DB_URL'):
+            allowed = {own_key, 'SUPABASE_EVENTS_DB_URL'} if slug != 'gateway' else set()
+            if schema and not result.get(own_key):
+                allowed.add('SUPABASE_DB_URL')
+            if key not in allowed:
+                result.pop(key)
+    if slug == 'gateway':
+        result.pop('SUPREME_DATABASE_MODE', None)
+        result.pop('DATABASE_URL', None)
+    if slug not in {'documents', 'nfse-engine', 'federal-tax-audit', 'fiscal-gov'}:
+        result.pop('SUPABASE_SERVICE_ROLE_KEY', None)
+    return result
 
 def main():
     parser = argparse.ArgumentParser()
@@ -41,7 +69,7 @@ def main():
             output = (logdir/(slug+'.log')).open('a', encoding='utf-8')
             streams.append(output)
             processes.append((slug,subprocess.Popen([sys.executable,'-m','uvicorn',module,'--host',args.host,'--port',str(port)],
-                cwd=ROOT,stdout=output,stderr=subprocess.STDOUT,
+                cwd=ROOT,stdout=output,stderr=subprocess.STDOUT,env=service_environment(slug, os.environ),
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)))
         print('Supreme: http://' + args.host + ':8080 — logs em data/logs; Ctrl+C para encerrar.',flush=True)
         while True:

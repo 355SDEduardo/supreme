@@ -4,10 +4,11 @@ Local mode uses an infrastructure SQLite log. Redis mode uses one stream per
 subscriber; each subscriber has its own group so every interested service sees
 each event. An event is acknowledged only after its handler commits.
 """
+from __future__ import annotations
+
 import asyncio
 from contextlib import contextmanager
 from datetime import datetime, timezone
-import json
 import logging
 import os
 from pathlib import Path
@@ -47,6 +48,10 @@ def publish(event_type, payload, event_id=None):
     return event.event_id
 
 def publish_envelope(event):
+    from .postgres_journal import journal, journal_url
+    if url := journal_url():
+        journal(url).publish(event)
+        return event.event_id
     # Always persist first: Redis delivery may be retried by the relay.
     with event_db() as db:
         db.execute('INSERT OR IGNORE INTO events(event_id,kind,body) VALUES(?,?,?)',
@@ -59,23 +64,38 @@ def make_event(event_type, payload, event_id=None):
         company_id=claims.get('company_id') or '', correlation_id=claims['correlation_id'],
         actor_user_id=claims['sub'], payload=payload, **({'event_id': event_id} if event_id else {}))
 
+def _flush_outbox(app) -> None:
+    """Own the entire transaction in one worker; never share live connections."""
+    from sqlalchemy import select, delete
+    table = app.state.outbox
+    with app.state.engine.begin() as connection:
+        for row in connection.execute(select(table).limit(100)).mappings().all():
+            publish_envelope(DomainEvent.model_validate_json(row['body']))
+            connection.execute(delete(table).where(table.c.id == row['id']))
+
+
 async def outbox_loop(app):
     """Publishing is idempotent: a crash between broker write and deletion is safe."""
-    from sqlalchemy import select, delete
     while True:
-        table = app.state.outbox
-        with app.state.engine.begin() as connection:
-            for row in connection.execute(select(table).limit(100)).mappings().all():
-                publish_envelope(DomainEvent.model_validate_json(row['body']))
-                connection.execute(delete(table).where(table.c.id == row['id']))
+        try:
+            await asyncio.to_thread(_flush_outbox, app)
+        except Exception:
+            # Roll back the outbox and retry; exception payloads may contain private event bodies.
+            log.error('Outbox delivery failed; pending events will be retried.')
+            await asyncio.sleep(2)
         await asyncio.sleep(0.5)
 
 async def consume_once(subscriber, handlers):
-    with event_db() as db:
-        rows = db.execute('SELECT e.event_id,e.body FROM events e LEFT JOIN deliveries d '
-            'ON d.event_id=e.event_id AND d.subscriber=? WHERE d.event_id IS NULL ORDER BY e.id LIMIT 100', (subscriber,)).fetchall()
+    from .postgres_journal import journal, journal_url
+    url = journal_url()
+    if url:
+        rows = await asyncio.to_thread(journal(url).pending, subscriber)
+    else:
+        with event_db() as db:
+            rows = db.execute('SELECT e.event_id,e.body FROM events e LEFT JOIN deliveries d '
+                'ON d.event_id=e.event_id AND d.subscriber=? WHERE d.event_id IS NULL ORDER BY e.id LIMIT 100', (subscriber,)).fetchall()
     for event_id, body in rows:
-        event = DomainEvent.model_validate_json(body)
+        event = DomainEvent.model_validate(body) if isinstance(body, dict) else DomainEvent.model_validate_json(body)
         handler = handlers.get(event.event_type)
         if handler:
             claims = {'sub': event.actor_user_id, 'organization_id': event.organization_id,
@@ -90,14 +110,23 @@ async def consume_once(subscriber, handlers):
                 return
             finally:
                 current_context.reset(marker)
-        with event_db() as db:
-            db.execute('INSERT OR IGNORE INTO deliveries VALUES(?,?)', (subscriber, event_id))
+        if url:
+            await asyncio.to_thread(journal(url).acknowledge, subscriber, event_id)
+        else:
+            with event_db() as db:
+                db.execute('INSERT OR IGNORE INTO deliveries VALUES(?,?)', (subscriber, event_id))
 
 async def run_consumer(subscriber, handlers):
+    from .postgres_journal import journal_url
+    journal_url()  # Fail fast for an incomplete or contradictory journal configuration.
     if os.getenv('REDIS_URL'):
         return await run_redis_consumer(subscriber, handlers)
     while True:
-        await consume_once(subscriber, handlers)
+        try:
+            await consume_once(subscriber, handlers)
+        except Exception:
+            log.error('Journal unavailable; delivery will be retried.')
+            await asyncio.sleep(2)
         await asyncio.sleep(1)
 
 async def run_redis_consumer(subscriber, handlers):

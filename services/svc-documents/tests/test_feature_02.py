@@ -137,3 +137,87 @@ def test_checklist_progress_tracking(db_session):
 
     db_session.refresh(checklist)
     assert checklist.completion_percentage > initial_pct
+
+
+def _remote_storage(monkeypatch, serve):
+    import httpx
+    from supreme_common.object_storage import ObjectStorage
+    monkeypatch.setenv('SUPREME_STORAGE_MODE', 'supabase')
+    monkeypatch.setenv('SUPABASE_URL', 'https://synthetic.supabase.co')
+    monkeypatch.setenv('SUPABASE_SERVICE_ROLE_KEY', 'synthetic-only')
+    client = httpx.Client(transport=httpx.MockTransport(serve))
+    real = ObjectStorage
+
+    def wrapped(bucket, client=None):
+        return real(bucket, client=client or shared['client'])
+
+    shared = {'client': client}
+    monkeypatch.setattr('supreme_common.object_storage.ObjectStorage', wrapped)
+    return client
+
+
+def test_remote_upload_failure_does_not_keep_a_document(db_session, monkeypatch):
+    from supreme_common.auth_context import current_context
+    client = _remote_storage(monkeypatch, lambda request: httpx_response_error())
+    marker = current_context.set({'organization_id': 'org-a', 'company_id': 'comp-10', 'sub': 'user-1'})
+    try:
+        with pytest.raises(HTTPException) as exc:
+            process_document_upload(db=db_session, company_id='comp-10', competence='2026-09', department='fiscal',
+                                    file_name='nota.pdf', file_content=b'%PDF-1.4\nfalha')
+        assert exc.value.status_code == 502
+        assert 'secret' not in str(exc.value.detail)
+        assert db_session.query(Document).count() == 0
+    finally:
+        current_context.reset(marker)
+        client.close()
+
+
+def httpx_response_error():
+    import httpx
+    return httpx.Response(500, text='secret')
+
+
+def test_remote_upload_can_be_retried_after_commit_failure(db_session, monkeypatch):
+    import httpx
+    from supreme_common.auth_context import current_context
+    objects = {}
+
+    def serve(request):
+        key = request.url.path.replace('/authenticated', '')
+        if request.method == 'POST':
+            if key in objects and objects[key] != request.content:
+                return httpx.Response(409)
+            if key in objects:
+                return httpx.Response(409)
+            objects[key] = request.content
+            return httpx.Response(201, json={})
+        return httpx.Response(200, content=objects[key])
+
+    client = _remote_storage(monkeypatch, serve)
+    attempts = {'n': 0}
+    original = db_session.commit
+
+    def commit():
+        attempts['n'] += 1
+        if attempts['n'] == 1:
+            db_session.rollback()
+            raise RuntimeError('falha de commit')
+        return original()
+
+    monkeypatch.setattr(db_session, 'commit', commit)
+    marker = current_context.set({'organization_id': 'org-a', 'company_id': 'comp-10', 'sub': 'user-1'})
+    content = b'%PDF-1.4\nnota reenviada'
+    try:
+        with pytest.raises(RuntimeError):
+            process_document_upload(db=db_session, company_id='comp-10', competence='2026-09', department='fiscal',
+                                    file_name='nota.pdf', file_content=content)
+        doc, _receipt, duplicate = process_document_upload(
+            db=db_session, company_id='comp-10', competence='2026-09', department='fiscal',
+            file_name='nota.pdf', file_content=content)
+    finally:
+        current_context.reset(marker)
+        client.close()
+    assert duplicate is False
+    assert doc.file_hash_sha256 == calculate_sha256(content)
+    assert len(objects) == 1
+    assert next(iter(objects.values())) == content

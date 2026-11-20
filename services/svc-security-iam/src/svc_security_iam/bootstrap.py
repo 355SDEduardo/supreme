@@ -1,8 +1,10 @@
 """Initialize an administrator in this service's configured database (also Docker)."""
+from __future__ import annotations
+
 import argparse
 import getpass
 from supreme_common.auth_context import SAFE_ID, hash_password, secret_key
-from supreme_common.database import configure_database
+from supreme_common.database import configure_database, initialize_database
 from .app import create_app
 from .auth import Identity
 from .database import Base
@@ -17,7 +19,7 @@ def main():
     secret_key()
     app=create_app()
     configure_database(app,Base)
-    Base.metadata.create_all(app.state.engine)
+    initialize_database(app, Base)
     with app.state.sessions() as db:
         if db.query(Identity).filter(Identity.email==args.email.lower()).first():
             parser.error('Usuário já existe; credenciais preservadas.')

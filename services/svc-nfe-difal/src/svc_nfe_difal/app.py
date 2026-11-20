@@ -20,6 +20,8 @@ from .core.ncm_comparison import compare_nfes, load_fiscal_catalog
 from .core.fiscal_registration import FiscalRegistration, FiscalRegistrationService
 from .core.document_comparison import compare_products_to_pdf, text_report
 from .core import reporting as reports
+from supreme_common.fiscal_database import enabled as remote_database
+from . import repository
 
 def catalog_path():
     root = Path(os.getenv('NFE_FISCAL_CATALOG_PATH', './data/storage/nfe/fiscal_data.json'))
@@ -30,13 +32,20 @@ def state_key():
     return claims['sub'] + ':' + claims.get('session_id', claims['jti'])
 
 def state_read():
+    if remote_database('nfe'):
+        return repository.read_state(state_key())
     with tenant_database('nfe') as db:
         db.execute('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, expires REAL, body TEXT)')
         db.execute('DELETE FROM sessions WHERE expires<?', (time.time(),))
         row = db.execute('SELECT body FROM sessions WHERE sid=?', (state_key(),)).fetchone()
     return json.loads(row[0]) if row else {}
 
-def state_write(data):
+def state_write(data, event=None):
+    if remote_database('nfe'):
+        repository.write_state(state_key(), data, event=event)
+        if event is not None:
+            repository.drain()
+        return
     with tenant_database('nfe') as db:
         db.execute('CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, expires REAL, body TEXT)')
         db.execute('DELETE FROM sessions WHERE expires<?', (time.time(),))
@@ -69,8 +78,16 @@ def create_app():
     from supreme_common.auth_context import secret_key
     @asynccontextmanager
     async def lifespan(app):
+        import asyncio
+        import contextlib
         secret_key()
-        yield
+        task = asyncio.create_task(repository.run())
+        try:
+            yield
+        finally:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
     app = FastAPI(title='svc-nfe-difal', lifespan=lifespan, dependencies=[Depends(enforce_request_context)])
     app.add_middleware(RequestLimitMiddleware)
     app.add_middleware(AuthMiddleware)
@@ -115,8 +132,13 @@ def create_app():
         state = state_read()
         state.update(nfes=[asdict(n) for n in notes], issues=issues,
                      comparison=[i.to_dict() for i in comparison], comparison_summary=asdict(summary))
-        state_write(state)
-        publish('NFeBatchProcessed', {'total_notes': len(notes), 'total_products': sum(len(n.produtos) for n in notes)})
+        payload = {'total_notes': len(notes), 'total_products': sum(len(n.produtos) for n in notes)}
+        if remote_database('nfe'):
+            from supreme_common.events import make_event
+            state_write(state, make_event('NFeBatchProcessed', payload))
+        else:
+            state_write(state)
+            publish('NFeBatchProcessed', payload)
         return {**reports.report_payload(notes, [ParseIssue(**i) for i in issues]), 'comparison': state['comparison']}
 
     @app.get('/nfe/state')
@@ -146,7 +168,8 @@ def create_app():
 
     @app.post('/nfe/compare-ncm')
     def compare_ncm():
-        items, summary = compare_nfes(current_notes(), load_fiscal_catalog(catalog_path()) if catalog_path().exists() else {})
+        catalog = repository.read_catalog() if remote_database('nfe') else load_fiscal_catalog(catalog_path())
+        items, summary = compare_nfes(current_notes(), catalog)
         state = state_read()
         state.update(comparison=[item.to_dict() for item in items], comparison_summary=asdict(summary))
         state_write(state)
@@ -154,11 +177,15 @@ def create_app():
 
     @app.post('/nfe/fiscal-catalog/import')
     async def import_catalog(file: UploadFile = File(...)):
-        return {'count': FiscalRegistrationService().replace(catalog_path(), await read_upload(file, 10*1024*1024))}
+        content = await read_upload(file, 10*1024*1024)
+        count = repository.replace_catalog(content) if remote_database('nfe') else FiscalRegistrationService().replace(catalog_path(), content)
+        return {'count': count}
 
     @app.post('/nfe/fiscal-catalog/items')
     async def add_catalog(request: Request):
-        return {'count': FiscalRegistrationService().add(catalog_path(), FiscalRegistration(**(await request.json())))}
+        item = FiscalRegistration(**(await request.json()))
+        count = repository.add_catalog(item) if remote_database('nfe') else FiscalRegistrationService().add(catalog_path(), item)
+        return {'count': count}
 
     @app.post('/nfe/compare-zips')
     async def zips(zip_cliente: UploadFile = File(...), zip_portal: UploadFile = File(...)):

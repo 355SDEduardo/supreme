@@ -1415,6 +1415,11 @@ dependencies = [
     { name = "svc-security-iam" },
 ]
 
+[package.optional-dependencies]
+supabase = [
+    { name = "supreme-common", extra = ["postgres"] },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "httpx" },
@@ -1427,6 +1432,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "supreme-common", editable = "libs/supreme_common" },
+    { name = "supreme-common", extras = ["postgres"], marker = "extra == 'supabase'", editable = "libs/supreme_common" },
     { name = "svc-accounting-ai", editable = "services/svc-accounting-ai" },
     { name = "svc-analytics-dre", editable = "services/svc-analytics-dre" },
     { name = "svc-bank-reconciliation", editable = "services/svc-bank-reconciliation" },
@@ -1442,6 +1448,7 @@ requires-dist = [
     { name = "svc-pdf-tools", editable = "services/svc-pdf-tools" },
     { name = "svc-security-iam", editable = "services/svc-security-iam" },
 ]
+provides-extras = ["supabase"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1672,7 +1679,9 @@ source = { editable = "services/svc-finance-bpo" }
 dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "openpyxl" },
     { name = "pydantic" },
+    { name = "pymupdf" },
     { name = "python-multipart" },
     { name = "sqlalchemy" },
     { name = "supreme-common" },
@@ -1683,7 +1692,9 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.27,<1" },
+    { name = "openpyxl", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.8,<3" },
+    { name = "pymupdf", specifier = ">=1.28" },
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "sqlalchemy", specifier = ">=2,<3" },
     { name = "supreme-common", editable = "libs/supreme_common" },
