@@ -150,6 +150,12 @@ def preview_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Documento não encontrado.")
     from fastapi.responses import FileResponse
+    if doc.storage_path.startswith('supabase://'):
+        from fastapi.responses import Response
+        from supreme_common.object_storage import ObjectStorage
+        return Response(ObjectStorage('documents-custody').get(doc.storage_path), media_type=doc.mime_type,
+                        headers={'Content-Security-Policy': "default-src 'none'; sandbox",
+                                 'Cache-Control': 'private, no-store'})
     return FileResponse(doc.storage_path, filename=doc.file_name, media_type=doc.mime_type,
                         headers={'Content-Security-Policy': "default-src 'none'; sandbox"})
 
@@ -157,6 +163,19 @@ def preview_document(
 @router.get('/{document_id}/content')
 def content_document(document_id: str, db: Session = Depends(get_db)):
     return preview_document(document_id, db)
+
+
+@router.get('/{document_id}/signed-url')
+def signed_document_url(document_id: str, db: Session = Depends(get_db)):
+    from fastapi.responses import JSONResponse
+    from supreme_common.object_storage import ObjectStorage
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(404, 'Documento não encontrado.')
+    if not doc.storage_path.startswith('supabase://'):
+        raise HTTPException(409, 'Documento em custódia local; use a rota de conteúdo.')
+    return JSONResponse({'url': ObjectStorage('documents-custody').signed_url(doc.storage_path), 'expires_in': 60},
+                        headers={'Cache-Control': 'no-store'})
 
 
 @router.get('/{document_id}/metadata')

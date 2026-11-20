@@ -7,9 +7,8 @@ import uuid
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, Response
 from supreme_common.auth_context import AuthMiddleware, context, enforce_request_context
-from supreme_common.sqlite_outbox import enqueue, drain
+from .repository import database, drain
 from supreme_common.security_xml import xml_inputs
-from supreme_common.state import tenant_database
 from supreme_common.uploads import RequestLimitMiddleware, read_upload
 from .models import NFSNacionalModel, Participante, TributacaoFederal
 from .parser import NFSeNacionalParser
@@ -20,17 +19,8 @@ from .multilayout.nfse_reporting import generate_nfse_excel_report, build_nfse_j
 from .sample_generator import SAMPLE_FILES
 from .workspace import Workspaces, current_workspace, workspace_context
 
-def database():
-    if workspace := current_workspace.get():
-        return workspace.database()
-    return tenant_database('nfse')
-
 def schema(db):
-    db.execute('CREATE TABLE IF NOT EXISTS artifacts (sha TEXT PRIMARY KEY, filename TEXT, content BLOB)')
-    db.execute('CREATE TABLE IF NOT EXISTS notes (key TEXT PRIMARY KEY, sha TEXT, note TEXT, canonical TEXT, status TEXT)')
-    db.execute('CREATE TABLE IF NOT EXISTS snapshots (version TEXT PRIMARY KEY, body TEXT)')
-    db.execute('CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, body TEXT)')
-    db.execute('CREATE TABLE IF NOT EXISTS tombstones (key TEXT PRIMARY KEY)')
+    pass  # Local schema belongs to the repository; remote DDL is migration-only.
 
 def adapt(doc, original):
     try:
@@ -90,21 +80,21 @@ def adapt(doc, original):
 def notes(active=True):
     with database() as db:
         schema(db)
-        rows = db.execute('SELECT note FROM notes' + (" WHERE status='AUTHORIZED'" if active else '')).fetchall()
+        rows = db.rows('notes', ('note',), **({'status': 'AUTHORIZED'} if active else {}))
     return [NFSNacionalModel.model_validate_json(row[0]) for row in rows]
 
 def ingest(inputs, mode, *, replace=False):
     with database() as db:
         schema(db)
         if replace:
-            db.execute('DELETE FROM artifacts')
-            db.execute('DELETE FROM tombstones')
+            db.delete('artifacts')
+            db.delete('tombstones')
         for filename, content in inputs:
             if mode == 'nacional_strict':
                 NFSeNacionalParser.parse(content, filename=filename)
             digest = sha256(content).hexdigest()
-            db.execute('INSERT OR IGNORE INTO artifacts VALUES(?,?,?)', (digest, filename, content))
-        artifacts = db.execute('SELECT filename,content FROM artifacts ORDER BY rowid').fetchall()
+            db.put('artifacts', (digest, filename, content), ignore=True)
+        artifacts = db.rows('artifacts', ('filename', 'content'))
         if sum(len(raw) for _, raw in artifacts) > 100 * 1024 * 1024 or len(artifacts) > 5000:
             raise ValueError('Acervo excede 5.000 XMLs ou 100 MB por empresa; arquive a competência antes de continuar.')
         state = process_nfse_batch(artifacts)
@@ -112,27 +102,27 @@ def ingest(inputs, mode, *, replace=False):
             raise ValueError('Lote não importado: há XMLs sem NFS-e reconhecida ou com erros de leitura. '
                              'Confira os arquivos; o lote anterior foi preservado.')
         raw_by_sha = {sha256(raw).hexdigest(): raw for _, raw in artifacts}
-        db.execute('DELETE FROM notes')
+        db.delete('notes')
         for doc in state.documents:
             if doc.kind.value != 'NFSE':
                 continue
             note = adapt(doc, raw_by_sha[doc.artifact_sha256])
-            if db.execute('SELECT 1 FROM tombstones WHERE key=?',(note.chave_nfse,)).fetchone():
+            if db.one('tombstones', ('key',), key=note.chave_nfse):
                 continue
-            db.execute('INSERT INTO notes VALUES(?,?,?,?,?)', (note.chave_nfse, doc.artifact_sha256,
+            db.put('notes', (note.chave_nfse, doc.artifact_sha256,
                 note.model_dump_json(), json.dumps(doc.to_dict()), doc.status.value))
         version = str(uuid.uuid4())
         data = {'metadata': {'version': version, 'total_notas': len(state.documents)}, 'notas': [
             {**json.loads(row[0]), 'retencoes': {k: float(v) for k,v in get_retention_amounts(NFSNacionalModel.model_validate_json(row[0])).items()}}
-            for row in db.execute("SELECT note FROM notes WHERE status='AUTHORIZED'")]}
+            for row in db.rows('notes', ('note',), status='AUTHORIZED')]}
         data['metadata']['total_notas'] = len(data['notas'])
         if current_workspace.get():
-            db.execute('DELETE FROM snapshots')
-        db.execute('INSERT INTO snapshots VALUES(?,?)', (version, json.dumps(data)))
-        db.execute('INSERT OR REPLACE INTO metadata VALUES(?,?)', ('audit', json.dumps(build_nfse_json_payload(state))))
-        db.execute('INSERT OR REPLACE INTO metadata VALUES(?,?)', ('latest', json.dumps(version)))
+            db.delete('snapshots')
+        db.put('snapshots', (version, json.dumps(data)))
+        db.put('metadata', ('audit', json.dumps(build_nfse_json_payload(state))))
+        db.put('metadata', ('latest', json.dumps(version)))
         if not current_workspace.get():
-            enqueue(db, 'NFSeBatchProcessed', {'snapshot_version': version,
+            db.enqueue('NFSeBatchProcessed', {'snapshot_version': version,
                 'snapshot_uri': '/api/export/json?version=' + version,
                 'total_notes': len(data['notas'])}, event_id=version)
     if not current_workspace.get():
@@ -146,11 +136,13 @@ def create_app():
     import asyncio
     import contextlib
     from contextlib import asynccontextmanager
-    from supreme_common.sqlite_outbox import run
+    from .repository import run
     @asynccontextmanager
     async def lifespan(app):
         from supreme_common.auth_context import secret_key
         secret_key()
+        from supreme_common.fiscal_database import validate_storage_configuration
+        validate_storage_configuration('nfse')
         async def expire_workspaces():
             while True:
                 await asyncio.sleep(30)
@@ -236,7 +228,7 @@ def create_app():
     def detail(key: str):
         with database() as db:
             schema(db)
-            row = db.execute('SELECT note,canonical FROM notes WHERE key=?', (key,)).fetchone()
+            row = db.one('notes', ('note', 'canonical'), key=key)
         if not row:
             raise HTTPException(404, 'Nota não encontrada.')
         return {**json.loads(row[0]), 'canonical': json.loads(row[1])}
@@ -245,7 +237,8 @@ def create_app():
     def download_xml(key: str):
         with database() as db:
             schema(db)
-            row = db.execute('SELECT content FROM artifacts JOIN notes ON notes.sha=artifacts.sha WHERE notes.key=?', (key,)).fetchone()
+            note = db.one('notes', ('sha',), key=key)
+            row = db.one('artifacts', ('content',), sha=note[0]) if note else None
         if not row:
             raise HTTPException(404, 'XML não encontrado.')
         return Response(row[0], media_type='application/xml')
@@ -254,17 +247,17 @@ def create_app():
     def remove_note(key: str):
         with database() as db:
             schema(db)
-            row = db.execute('SELECT sha FROM notes WHERE key=?', (key,)).fetchone()
+            row = db.one('notes', ('sha',), key=key)
             if not row:
                 raise HTTPException(404, 'Nota não encontrada.')
-            db.execute('INSERT OR IGNORE INTO tombstones VALUES(?)', (key,))
+            db.put('tombstones', (key,), ignore=True)
         return ingest([], 'multi_layout_audit')
 
     @app.post('/api/notes/{key}/restore')
     def restore_note(key: str):
         with database() as db:
             schema(db)
-            db.execute('DELETE FROM tombstones WHERE key=?',(key,))
+            db.delete('tombstones', key=key)
         return ingest([], 'multi_layout_audit')
 
     @app.delete('/api/notes')
@@ -287,7 +280,7 @@ def create_app():
     def findings():
         with database() as db:
             schema(db)
-            row = db.execute("SELECT body FROM metadata WHERE key='audit'").fetchone()
+            row = db.one('metadata', ('body',), key='audit')
         return json.loads(row[0]) if row else {'documents': [], 'issues': []}
 
     @app.get('/api/export/json')
@@ -295,9 +288,9 @@ def create_app():
         with database() as db:
             schema(db)
             if not version:
-                row = db.execute("SELECT body FROM metadata WHERE key='latest'").fetchone()
+                row = db.one('metadata', ('body',), key='latest')
                 version = json.loads(row[0]) if row else ''
-            row = db.execute('SELECT body FROM snapshots WHERE version=?', (version,)).fetchone()
+            row = db.one('snapshots', ('body',), version=version)
         if not row:
             if version:
                 raise HTTPException(404,'Snapshot não encontrado neste contexto.')
@@ -309,7 +302,7 @@ def create_app():
         if mode == 'auditoria':
             with database() as db:
                 schema(db)
-                state = process_nfse_batch(db.execute('SELECT filename,content FROM artifacts').fetchall())
+                state = process_nfse_batch(db.rows('artifacts', ('filename', 'content')))
             content = generate_nfse_excel_report(state).getvalue()
         else:
             content = NFSeExporter.generate_excel(notes())

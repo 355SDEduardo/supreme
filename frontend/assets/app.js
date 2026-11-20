@@ -285,6 +285,7 @@ async function handleLoginSubmit(event) {
 
 async function handleLogout() {
   window.PluggyConfiguration?.reset();
+  window.BpoStatements?.reset();
   await ApiClient.resetNfseWorkspace();
   resetNfseView();
   try {
@@ -331,6 +332,7 @@ async function initializeCompanySelector() {
 async function handleCompanySwitch(targetCompanyId, reloadView = true) {
   if (!targetCompanyId) return;
   window.PluggyConfiguration?.reset();
+  window.BpoStatements?.reset();
   try {
     await ApiClient.resetNfseWorkspace();
     resetNfseView();
@@ -855,7 +857,7 @@ async function requestMissingChecklist() {
 // ============================================================================
 async function loadFinanceViewData() {
   if (!AppState.activeCompanyId) return;
-  await Promise.all([loadPayablesQueue(), loadAgingReport()]);
+  await Promise.all([loadPayablesQueue(), loadAgingReport(), window.BpoStatements?.refresh()]);
 }
 
 async function loadPayablesQueue() {

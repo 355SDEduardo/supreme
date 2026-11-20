@@ -72,14 +72,18 @@ def process_document_upload(
     # Store immutable content by hash, never by an untrusted client filename.
     from pathlib import Path
     from supreme_common.auth_context import current_context, tenant_path
-    root = tenant_path(settings.STORAGE_DIR) if current_context.get() else Path(settings.STORAGE_DIR) / company_id
-    root.mkdir(parents=True, exist_ok=True)
-    target = root / sha256
-    if not target.exists():
-        temporary = root / (uuid.uuid4().hex + '.tmp')
-        temporary.write_bytes(file_content)
-        temporary.replace(target)
-    storage_path = str(target)
+    from supreme_common.object_storage import ObjectStorage, enabled
+    if enabled():
+        storage_path = ObjectStorage('documents-custody').put(file_content)
+    else:
+        root = tenant_path(settings.STORAGE_DIR) if current_context.get() else Path(settings.STORAGE_DIR) / company_id
+        root.mkdir(parents=True, exist_ok=True)
+        target = root / sha256
+        if not target.exists():
+            temporary = root / (uuid.uuid4().hex + '.tmp')
+            temporary.write_bytes(file_content)
+            temporary.replace(target)
+        storage_path = str(target)
 
     doc = Document(
         company_id=company_id,

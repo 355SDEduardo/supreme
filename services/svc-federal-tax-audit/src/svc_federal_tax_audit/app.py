@@ -4,6 +4,9 @@ from datetime import date
 import json
 import os
 import uuid
+from contextvars import ContextVar
+from supreme_common.fiscal_database import enabled as remote_database
+from . import repository
 from fastapi import Depends, FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel, Field
 from supreme_common.auth_context import AuthMiddleware, context, enforce_request_context, tenant_path
@@ -13,8 +16,20 @@ from supreme_common.uploads import RequestLimitMiddleware, read_upload
 from .engine import FederalTaxAuditEngine
 from .tools.agent_tools import FederalTaxAuditTools
 
+_materialized = ContextVar('audit_workspace', default=None)
+
 def workspace():
-    return tenant_path(os.getenv('TAX_AUDIT_WORKSPACES_DIR', './data/storage/tax_audit'))
+    return _materialized.get() or tenant_path(os.getenv('TAX_AUDIT_WORKSPACES_DIR', './data/storage/tax_audit'))
+
+def save_input(name, content):
+    if remote_database('tax_audit'):
+        repository.put_file(name, content)
+    else:
+        target = workspace() / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temporary = target.with_name(uuid.uuid4().hex + '.tmp')
+        temporary.write_bytes(content)
+        temporary.replace(target)
 
 class SimulationRequest(BaseModel):
     presuncao_pct: float = Field(32, ge=1, le=100, allow_inf_nan=False)
@@ -23,6 +38,13 @@ class SimulationRequest(BaseModel):
     base_calculo_custom: float | None = Field(None, ge=0, allow_inf_nan=False)
 
 def reload_snapshot():
+    if remote_database('tax_audit') and _materialized.get() is None:
+        with repository.materialized_workspace() as path:
+            marker = _materialized.set(path)
+            try:
+                return reload_snapshot()
+            finally:
+                _materialized.reset(marker)
     engine = FederalTaxAuditEngine(str(workspace()))
     engine.load_all()
     result = engine.run_full_audit()
@@ -49,13 +71,22 @@ def reload_snapshot():
     version = str(uuid.uuid4())
     snapshot = {'version': version, 'result': result, 'notes': engine.nfse_data,
                 'documents': engine.document_catalog, 'darfs': engine.darfs_data}
-    with tenant_database('tax_audit') as db:
-        db.execute('CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK(id=1), body TEXT)')
-        db.execute('INSERT OR REPLACE INTO snapshot VALUES(1,?)', (json.dumps(snapshot, default=str),))
-    publish('FederalTaxAuditCompleted', {'snapshot_version': version, 'total_findings': len(findings)})
+    payload = {'snapshot_version': version, 'total_findings': len(findings)}
+    if remote_database('tax_audit'):
+        from supreme_common.events import make_event
+        repository.save_snapshot(json.loads(json.dumps(snapshot, default=str)),
+            make_event('FederalTaxAuditCompleted', payload, event_id=version))
+        repository.drain()
+    else:
+        with tenant_database('tax_audit') as db:
+            db.execute('CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK(id=1), body TEXT)')
+            db.execute('INSERT OR REPLACE INTO snapshot VALUES(1,?)', (json.dumps(snapshot, default=str),))
+        publish('FederalTaxAuditCompleted', payload)
     return snapshot
 
 def snapshot():
+    if remote_database('tax_audit'):
+        return repository.read_snapshot() or reload_snapshot()
     with tenant_database('tax_audit') as db:
         db.execute('CREATE TABLE IF NOT EXISTS snapshot (id INTEGER PRIMARY KEY CHECK(id=1), body TEXT)')
         row = db.execute('SELECT body FROM snapshot WHERE id=1').fetchone()
@@ -66,11 +97,21 @@ def create_app():
     from .events import start, stop
     @asynccontextmanager
     async def lifespan(app):
+        import asyncio
+        import contextlib
         from supreme_common.auth_context import secret_key
         secret_key()
+        from supreme_common.fiscal_database import validate_storage_configuration
+        validate_storage_configuration('tax_audit')
+        task = asyncio.create_task(repository.run())
         await start(app)
-        yield
-        await stop(app)
+        try:
+            yield
+        finally:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+            await stop(app)
     app = FastAPI(title='svc-federal-tax-audit', lifespan=lifespan, dependencies=[Depends(enforce_request_context)])
     app.add_middleware(RequestLimitMiddleware)
     app.add_middleware(AuthMiddleware)
@@ -88,11 +129,7 @@ def create_app():
     def import_nfse(data: dict):
         if not isinstance(data.get('notas'), list):
             raise HTTPException(422, 'Informe um JSON consolidado com a lista notas.')
-        target = workspace() / 'notas'
-        target.mkdir(exist_ok=True)
-        temporary = target / (str(uuid.uuid4()) + '.tmp')
-        temporary.write_text(json.dumps(data, ensure_ascii=False), encoding='utf-8')
-        temporary.replace(target / 'Consolidado_NFSe.json')
+        save_input('notas/Consolidado_NFSe.json', json.dumps(data, ensure_ascii=False).encode('utf-8'))
         return {'snapshot_version': reload_snapshot()['version']}
 
     @app.post('/api/documents/upload')
@@ -104,7 +141,7 @@ def create_app():
         content = await read_upload(file, 30*1024*1024)
         if not content.startswith(b'%PDF-'):
             raise HTTPException(400, 'PDF inválido.')
-        (workspace() / name).write_bytes(content)
+        save_input(name, content)
         return {'snapshot_version': reload_snapshot()['version']}
 
     class LedgerPeriod(BaseModel):
@@ -117,7 +154,7 @@ def create_app():
         start, end = payload.ledger_start, payload.ledger_end
         if start > end:
             raise HTTPException(422,'Período do livro inválido.')
-        (workspace()/'audit_config.json').write_text(payload.model_dump_json(),encoding='utf-8')
+        save_input('audit_config.json', payload.model_dump_json().encode('utf-8'))
         return {'snapshot_version':reload_snapshot()['version']}
 
     @app.get('/api/audit')

@@ -12,6 +12,10 @@ def isolated_runtime(tmp_path, monkeypatch):
     monkeypatch.setenv('MASTER_ENCRYPTION_KEY', '12' * 32)
     monkeypatch.setenv('REDIS_URL', '')
     monkeypatch.delenv('DATABASE_URL', raising=False)
+    monkeypatch.delenv('SUPREME_DATABASE_MODE', raising=False)
+    for key in list(os.environ):
+        if key.startswith('SUPABASE_'):
+            monkeypatch.delenv(key, raising=False)
     for name, relative in {'DB_ROOT_DIR':'db','STORAGE_ROOT_DIR':'storage','DOCUMENT_UPLOADS_DIR':'uploads',
         'PDF_OUTPUTS_DIR':'pdf','TAX_AUDIT_WORKSPACES_DIR':'audit','EVENT_DB_PATH':'events/events.db',
         'NFE_FISCAL_CATALOG_PATH':'nfe/fiscal_data.json'}.items():

@@ -1,7 +1,9 @@
 """Per-application engines and enforced tenant criteria. No shared domain metadata."""
-from sqlalchemy import Column, String, Text, Table, create_engine, event
+from __future__ import annotations
+
+from sqlalchemy import Column, String, Text, Table, event, inspect
 from sqlalchemy.orm import Session, sessionmaker, with_loader_criteria
-from fastapi import HTTPException, Request
+from fastapi import HTTPException
 from .auth_context import current_context
 
 def request_db():
@@ -9,25 +11,45 @@ def request_db():
     raise RuntimeError('Database dependency not configured.')
     yield
 
-def configure_database(app, base, database_url=None, database_engine=None):
-    import os
-    from pathlib import Path
-    slug = app.title
-    path = Path(os.getenv('DB_ROOT_DIR', './data/db'))
-    path.mkdir(parents=True, exist_ok=True)
-    url = database_url or os.getenv('DATABASE_URL') or f'sqlite:///{(path / (slug + ".db")).as_posix()}'
-    engine = database_engine or create_engine(url, connect_args={'check_same_thread': False} if url.startswith('sqlite') else {}, pool_pre_ping=True)
+def prepare_metadata(base, slug: str):
+    """Apply the same infrastructure columns to runtime and deployment DDL."""
     classes = [mapper.class_ for mapper in base.registry.mappers]
     outbox = base.metadata.tables.get('supreme_outbox')
     if outbox is None:
         outbox = Table('supreme_outbox', base.metadata, Column('id', String(100), primary_key=True), Column('body', Text, nullable=False))
-    app.state.outbox = outbox
     organization_only = slug == 'svc-companies'
     for cls in classes:
         if not hasattr(cls, 'organization_id'):
             cls.organization_id = Column(String(100), nullable=True, index=True)
         if not organization_only and cls.__tablename__ not in {'tax_obligations', 'chart_of_accounts', 'iam_users'} and not hasattr(cls, 'company_id'):
             cls.company_id = Column(String(100), nullable=True, index=True)
+    return classes, outbox
+
+
+def initialize_database(app, base) -> None:
+    engine = app.state.engine
+    options = engine.get_execution_options()
+    if not options.get('supreme_managed_schema'):
+        base.metadata.create_all(engine)
+        return
+    schema = options.get('schema_translate_map', {}).get(None)
+    inspector = inspect(engine)
+    present = set(inspector.get_table_names(schema=schema))
+    for table in base.metadata.tables.values():
+        if table.name not in present:
+            raise RuntimeError('Schema incompleto: aplique as migrações Supabase antes de iniciar o serviço.')
+        columns = {col['name'] for col in inspector.get_columns(table.name, schema=schema)}
+        if not set(table.columns.keys()).issubset(columns):
+            raise RuntimeError('Colunas ausentes: aplique as migrações Supabase antes de iniciar o serviço.')
+
+
+def configure_database(app, base, database_url=None, database_engine=None):
+    from .supabase_database import create_service_engine
+    slug = app.title
+    engine = database_engine if database_engine is not None else create_service_engine(slug, database_url)
+    classes, outbox = prepare_metadata(base, slug)
+    app.state.outbox = outbox
+    organization_only = slug == 'svc-companies'
 
     class TenantSession(Session):
         pass
